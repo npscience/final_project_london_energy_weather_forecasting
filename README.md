@@ -1,12 +1,30 @@
 # Modelling domestic energy usage by time and weather
 
+## Project description
+
 Final project for CodeClan, August 2023
 
-_set up this readme!_
+_overview of what this repo contains and is for_
 
 ## About the topic
 
+_see PDA plan template for this info_
+
 Brief overview of the topic, who it is important for, what kinds of business Qs exist here
+
+### Analysis brief
+
+Qs to explore
+
+### Process
+
+step-by-step / links to key docs
+
+### Findings, model
+
+Screenshots, etc.
+
+Link to model?
 
 ## About the data
 
@@ -24,22 +42,12 @@ Choice of data to use
 note the grain of the data
 list columns (variables)
 
-## Analysis brief
+## Requirements to run locally
 
-Qs to explore
-
-## Findings, model
-
-Screenshots, etc.
-
-Link to model?
-
-## Try it yourself
-
-### requirements 
+### Environment
 
 packages & versions
 
-### step-by-step
+### Getting started
 
 what to run when

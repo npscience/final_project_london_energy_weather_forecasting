@@ -19,19 +19,43 @@ initiated, TO DO
 
 ## Context
 
-#### Business intelligence and data-driven decision making
-
-What insights can the business/organisation gain from your analysis and how will your analysis help the business/organisation make better decisions? 
-
 #### Domain knowledge and the business context
 
-Briefly describe the business/organisation and where your analysis fits within its aims/activity. 
+_Briefly describe the business/organisation and where your analysis fits within its aims/activity._
+
+For the purposes of this project, I am imagining I am analysing data for the Energy Saving Trust in Scotland. The Energy Saving Trust aims to ... _purpose, business, audience, etc_
+
+_ADD key points about Scotland's energy profile: https://www.gov.scot/publications/energy-statistics-for-scotland-q3-2022/pages/key-points/_
+
+Here, the (imaginary) brief is to understand how to predict domestic energy consumption according to time and weather. Without having access to sufficiently granular data for domestic energy consumption in Scotland, I am using existing historic data from London households (see below).
+
+#### Business intelligence and data-driven decision making
+
+_Note order of headings swapped with the above._
+
+_What insights can the business/organisation gain from your analysis and how will your analysis help the business/organisation make better decisions?_ 
+
+Understanding which features are good predictors for household energy use enables the business to:
+
+* model energy consumption in upcoming years (and seasons) with different weather scenarios (i.e. as climate changes)
+* predict times of high and low energy demand (low demand is important, because renewable sources are often turned down at this time to manage load in the grid)
+* calculate potential energy and cost savings from any improvements to domestic energy efficiency
+
+There may also be ways to cluster households by their energy consumption patterns, which may be a useful way to segment domestic energy customers and provide more targeted information and policy recommendations.
 
 ## Data
 
 #### Internal and external data sources
 
-Briefly describe your data sources and which were internal (provided by the organisation) and external (not sourced from the organisation's data)
+The data sources for this project are all external:
+
+1. **London Energy Data** - a single csv file with daily aggregated energy usage for 5,567 London households from November 2011 to February 2014 from the [UK Power Networks' SmartMeter Energy Consumption Data in London Households](https://data.london.gov.uk/dataset/smartmeter-energy-use-data-in-london-households) project, provided to the public domain (CC0) by Emmanuel F. Werr on Kaggle. URL: https://www.kaggle.com/datasets/emmanuelfwerr/london-homes-energy-data. (downloaded on August 19, 2023). This csv file contains 3 attributes (household id, date, total energy consumption (in kilowatt-hours, kWh)) and 3510433 observations, where one observation is one household's energy consumption on that date.
+2. **London Weather Data** - a single csv file with daily historic weather observations in London from 1978 to 2021 sourced from the [European Climate Assessment & Dataset (ECAD)](https://www.ecad.eu/), provided to the public domain (CC0) by Emmanuel F. Werr on Kaggle. URL: https://www.kaggle.com/datasets/emmanuelfwerr/london-weather-data (downloaded on August 19, 2023). This csv file contains 10 attributes (date, and nine weather measurements, including min, max and mean temperature, number of hours of sunshine and total precipitation) and 15341 observations, where one observation is one day's weather. The weather measurements are a mix of totals, averages, minimums and maximums across the different measures, although it is not clear for some values whether they are totals or averages, since the original [element](https://www.ecad.eu/dailydata/datadictionaryelement.php) code and the cleaning script is not included.
+3. **UK Power Networks' original data** - original data from the UK Power Networks' project mentioned above, provided as half-hourly measurements of household energy usage for 5,567 London households, including tariff types, and covering November 2011 to February 2014. URL: https://data.london.gov.uk/dataset/smartmeter-energy-use-data-in-london-households (zip file of low-carbon-london-data-168-files (758.86 MB) downloaded on August 19, 2023) and reused here under the [CC-BY license](https://opendefinition.org/licenses/cc-by/).
+
+The original research project by UK Power Network included two groups of customers: one group (~1100 households) had dynamic energy pricing, and received warnings about higher and lower prices for the next day; the other set (~4500 households) had fixed prices. The project aimed to understand how pricing warnings might affect energy consumption behaviour.The daily aggregated London energy dataset provided on Kaggle does not include this information about the tariff settings and warnings, therefore there is a missing variable here. However the aggregated data is smaller and easier to work with than the original research data provided by the UK Power Network (which is 167 million rows in total, with half-hourly measurements). Given the timeframe, I have chosen to work with the aggregated data (at least initially).
+
+More information about the original Low Carbon London project, including final reports, is available from https://innovation.ukpowernetworks.co.uk/projects/low-carbon-london/.
 
 #### Types of data
 
@@ -45,11 +69,17 @@ The data you use in the project has to meet the following criteria:
 
 #### Data formats
 
-What format did your data come in? E.g. all downloaded flat files (CSV) or any data from APIs, scraping etc.
+_What format did your data come in? E.g. all downloaded flat files (CSV) or any data from APIs, scraping etc._
+
+All data were downloaded as CSV files from source websites.
 
 #### Data quality and bias
 
-Briefly describe the quality of the data and whether you have any reasons to suggest the data is biased e.g. only data from a specific demographic even though a broader demographic would be of interest to the organisation.
+_Briefly describe the quality of the data and whether you have any reasons to suggest the data is biased e.g. only data from a specific demographic even though a broader demographic would be of interest to the organisation._
+
+According to the original research project, "the customers in the trial were recruited as a balanced sample representative of the Greater London population" (]data.london.gov.uk](https://data.london.gov.uk/dataset/smartmeter-energy-use-data-in-london-households)). _say something about comparing energy use in London v Scotland, population demographics..._
+
+_Note also point above about missing information on customer group (dynamic v fixed tariffs)._
 
 ## Ethics
 
