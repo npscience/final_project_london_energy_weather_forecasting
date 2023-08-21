@@ -1,0 +1,384 @@
+---
+title: "Exploration"
+output: html_notebook
+---
+
+# Brief
+
+Understand recent trends in home energy efficiency in the UK
+
+# Data source(s)
+
+**UK Government:**
+
+* UK gov has National Energy Efficiency Data (NEED) framework: https://www.gov.uk/government/collections/national-energy-efficiency-data-need-framework: "The data framework matches gas and electricity consumption data, collected for DESNZ subnational energy consumption statistics, with information on energy efficiency measures installed in homes, from government schemes, such as the Energy Company Obligation (ECO) and the Green Homes Grant. It also includes data about property attributes and household characteristics, obtained from a range of sources." There is also ND-NEED for non-domestic energy use. June 2023 statistical analysis: https://www.gov.uk/government/statistics/national-energy-efficiency-data-framework-need-report-summary-of-analysis-2023 (released every 6 months) - includes summary of stats, comparisons to other data sources, etc
+* GOV UK has Household Energy Efficiency data (open gov license): https://www.data.gov.uk/dataset/1656fb7d-1ca3-462d-a11b-8078acc33275/household-energy-efficiency "These statistics include measures installed under the Energy Company Obligation (ECO) and the Green Deal schemes in Great Britain. It also includes further analysis and geographical breakdowns of ECO measures, ECO delivery costs, estimated carbon and energy savings from measures installed and the supply chain". .xlsx sheets (and annual reports, with excel charts) available from https://www.data.gov.uk/dataset/1656fb7d-1ca3-462d-a11b-8078acc33275/household-energy-efficiency - potentially monthly datasets, most recent is July 2023
+
+**Energy Saving Trust** uses data from
+
+* [English Housing Survey](https://www.gov.uk/government/collections/english-housing-survey), e.g. English Housing Survey (Energy) 2021-2022 report: https://www.gov.uk/government/statistics/english-housing-survey-2021-to-2022-energy and stats dataset for energy performance: https://www.gov.uk/government/collections/english-housing-survey-live-tables; and
+* "statistics available from the Department of Business, Energy and Industrial Strategy (BEIS)" to look at the state of the housing stock, in terms of insulation amounts, boiler efficiencies, water use, transport energy use, energy prices... -- https://energysavingtrust.org.uk/about-us/our-data/ 
+
+**Academic:** 
+* IDEAL dataset is academic open access dataset, sample of 255 UK homes, 2018, with modelling https://www.nature.com/articles/s41597-021-00921-y 
+* **Kaggle** dataset for London household energy use from Nov 2011 to Feb 2014: https://www.kaggle.com/datasets/emmanuelfwerr/london-homes-energy-data (usability score is high!) - homepage: https://data.london.gov.uk/dataset/smartmeter-energy-use-data-in-london-households 
+  * can join to London weather data https://www.kaggle.com/datasets/emmanuelfwerr/london-weather-data 
+  * energy consumption modelling https://www.kaggle.com/code/rheajgurung/energy-consumption-forecast 
+
+**WHO** has global data on household energy use for cooking - focus on health impacts of exposure to pollution https://www.who.int/data/gho/data/themes/air-pollution/who-household-energy-db
+
+# Explore data
+
+
+## English housing survey energy performance data
+
+Source: UK Gov, English Housing Survey data on energy performance - last updated 13 July 2023, accessed 19 August 2023.
+
+Dataset: DA6103 - Heating: households .ods format
+
+```{r}
+library(readODS) # note non-tidyverse package, in CRAN
+```
+
+```{r}
+list_ods_sheets("data/raw_data/DA6103_Heating_-_households__4_.ods")
+```
+
+
+```{r}
+heating_households <- read_ods("data/raw_data/DA6103_Heating_-_households__4_.ods", sheet = 1)
+```
+
+```{r}
+heating_households
+```
+
+This is **aggregated data**, presents average measure for each individual group in the data but could not use this for modelling.
+
+### Household energy efficiency stats
+
+Source: UK Gov, Household Energy Efficiency data, July 2023; URL: https://www.data.gov.uk/dataset/1656fb7d-1ca3-462d-a11b-8078acc33275/household-energy-efficiency (last updated 20 July 2023, accessed August 19, 2023)
+
+* Headline release (July 2023)
+* Detailed report 2022 - data tables xlsx
+
+```{r}
+library(readxl)
+```
+
+```{r}
+excel_sheets("data/raw_data/Detailed_HEE_tables_-_Mar_2023.xlsx")
+```
+
+```{r}
+contents <- read_excel("data/raw_data/Detailed_HEE_tables_-_Mar_2023.xlsx", sheet = "Contents")
+```
+
+```{r}
+contents
+```
+
+Suggests this is aggregated data too
+
+```{r}
+read_excel("data/raw_data/Detailed_HEE_tables_-_Mar_2023.xlsx", sheet = "T1.2")
+```
+
+This is aggregated data.
+
+```{r}
+excel_sheets("data/raw_data/Headline_HEE_tables_20_JULY_2023.xlsx")
+```
+```{r}
+read_excel("data/raw_data/Headline_HEE_tables_20_JULY_2023.xlsx", sheet = "Contents")
+```
+
+```{r}
+read_excel("data/raw_data/Headline_HEE_tables_20_JULY_2023.xlsx", sheet = "Further Info")
+```
+
+Check methods note for any sources that may be more raw and open to use: https://www.gov.uk/government/publications/household-energy-efficiency-statistics-methodology-note
+
+Of the sources, the only available one is: "Data on ECO brokerage is publicly available [here](https://www.gov.uk/government/publications/energy-companies-obligation-eco-brokerage-results) following each auction. The ECO brokerage mechanism was decommissioned in June 2021." -- note it started in 15 January 2013, but last time election took place was November 2020 (later ones not because no lots submitted).
+
+(Also note "Office for National Statistics (ONS) – which produce map boundary files and
+geography lookup tables." <- may be useful for project if want to map data onto UK areas.)
+
+Data explored on https://www.gov.uk/government/publications/energy-companies-obligation-eco-brokerage-results:
+
+* Nov 2020 - only 4 rows - similar for others in 2020
+* 2014 batch data - Dec csv has ~1000 rows, still no more info than the below
+
+What is ECO brokerage?
+
+* administered by depts for (i) energy security and net zero, and (ii) business, energy & industrial strategy (BEIS)
+
+> **Brokerage objectives**
+Brokerage is a market based trading platform introduced to support cost-effective delivery of the Energy Company Obligation (ECO). The objectives of the brokerage platform are:
+* competition – new sellers benefit from anonymity, which levels the playing field and allows smaller sellers to fairly compete with larger sellers.
+* transparency – costs are published after each auction, allowing brokerage to set the market price.
+* market efficiency – a market with low transaction costs and administrative burdens for all parties.
+* cost effectiveness – enables obligated energy companies to deliver ECO at the lowest cost, thereby reducing the impact on consumer bills
+
+> **How it works**
+Brokerage operates as a fortnightly anonymous auction where providers of the Energy Company Obligation (ECO) can sell ‘lots’ of ECO measures to energy companies in return for ECO subsidy.
+
+https://www.gov.uk/guidance/energy-companies-obligation-brokerage
+
+What does data tell me?
+
+* ECO lot name (e.g. Affordable Warmth)
+* band
+* contract term
+* price per unit -- lots of "Not set" here, doesn't reveal the actual price per unit
+* at or above reserve price (yes/no)
+* reserve price
+
+Maybe useful to track reserve price over time, consider if there is external data that influences this. But risky to try to assume what might predict / influence reserve price, I have no domain knowledge here.
+
+----
+
+### Energy consumption in the UK
+
+Source: https://www.gov.uk/government/statistics/energy-consumption-in-the-uk-2022
+published 29 september 2022
+last updated 27 october 2022
+accessed 19 August 2023
+
+Data: ECUK 2022: Primary energy consumption data tables (Excel)
+
+```{r}
+excel_sheets("data/raw_data/ECUK_2022_Primary_Energy_tables.xlsx")
+```
+
+```{r}
+read_excel("data/raw_data/ECUK_2022_Primary_Energy_tables.xlsx", sheet = "Contents")
+```
+
+```{r}
+# Table P1 is "Actual primary consumption and temperature corrected comparison, and mean air temperatures 1970 to 2021"
+read_excel("data/raw_data/ECUK_2022_Primary_Energy_tables.xlsx", sheet = "Table P1")
+```
+
+Data grain: 1 row = 1 year, with actual primary consumption, temp-adjusted consumption, mean air temperature (annual)
+
+
+# Find data for final project
+
+PDA requirements: 
+
+The data you use in the project has to meet the following criteria:
+
+* At least 5,000 rows
+* At least 3 sources of data
+* Must contain text data, numeric data and dates
+
+
+
+### other gov UK datasets
+
+* UK greenhouse gas emissions (before 2005, only CO2 reported here) https://www.data.gov.uk/dataset/723c243d-2f1a-4d27-8b61-cdb93e5b10ff/uk-greenhouse-gas-emissions-local-authority-and-regional
+* Scottish greenhouse gas emissions https://www.data.gov.uk/dataset/2dea7ff8-0344-40de-b71e-231a53f8cb88/scottish-greenhouse-gas-emissions
+* Report: non-domestic properties and their energy use https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1086903/non_domestic_need_data_framework_2022.pdf
+* Building energy efficiency survey https://www.gov.uk/government/publications/building-energy-efficiency-survey-bees
+* Regional and local authority electricity consumption statistics = Estimates of electricity consumption at region and local authority levels in Great Britain. (ONS) https://www.gov.uk/government/statistics/regional-and-local-authority-electricity-consumption-statistics 
+
+Problem with UK gov open data is that it is presented in aggregate form (for privacy and security reasons) so not raw enough for me to use for modelling.
+
+### kaggle: energy
+
+* Spain energy demand v weather model https://www.kaggle.com/datasets/nicholasjhana/energy-consumption-generation-prices-and-weather?select=energy_dataset.csv
+  * notebooks include electricity price forecasting using a DNN https://www.kaggle.com/code/dimitriosroussis/electricity-price-forecasting-with-dnns-eda
+  * predictive with neural network https://www.kaggle.com/code/scube97/notebookddf4f4a3be 
+* global data on sustainable energy https://www.kaggle.com/datasets/anshtanwar/global-data-on-sustainable-energy (source: World Bank and International Energy Agency - but single author here, not clear how created from source)
+* electricity day-ahead prices in france (and UK,...) - for predictive forecasting https://www.kaggle.com/datasets/henriupton/electricity-dayahead-prices-entsoe 
+
+### energy data
+
+* OWID world energy dataset https://www.kaggle.com/datasets/pralabhpoudel/world-energy-consumption
+* Global energy consumption 2000-2020 https://www.kaggle.com/datasets/anshtanwar/global-data-on-sustainable-energy 
+* UN energy balance --> API, build query here https://data.un.org/SdmxBrowser/start
+* investment inputs: world bank private investment https://datacatalog.worldbank.org/search/dataset/0037801/Private-Participation-in-Renewable-Energy 
+* energydata.info has multiple datasets: https://energydata.info/
+  * policy support for renewables (and other SDG 7 indicators) https://energydata.info/dataset/world-regulatory-indicators-sustainable-energy-2016/resource/4b20701a-24cb-40f0-ba3d-471fae23217c
+  * public investment https://energydata.info/dataset/world-public-investments-2019-million-usd-by-country-area-technology-and-year-2020-2000/resource/2b986ab4-db55-457a-98c8-55710e319c46
+  * installed electriciy generation capacity, by type (e.g. geothermal, nuclear, wind) https://energydata.info/dataset/installed-electricity-capacity-by-country-area-mw-by-country/resource/6938ec3a-f7bb-4493-86ba-f28faa62f139
+  * the world bank data catalog https://datacatalog.worldbank.org/search?q=renewable&start=0&sort=
+  * international energy agency has data to buy https://www.iea.org/data-and-statistics/data-tools/renewables-data-explorer
+  * Scotland renewables industry data https://www.scottishrenewables.com/our-industry/statistics & https://scotland.shinyapps.io/Energy/ & https://www.gov.scot/publications/energy-statistics-for-scotland-q3-2022/pages/renewable-electricity-generation/
+  * spatial data for renewable energy sites https://www.data.gov.uk/dataset/a469a1fc-be8d-44dc-8cde-730ce4537e07/renewable-energy-sites-scotland
+  * UN stats division & international energy agency data used for --> https://trackingsdg7.esmap.org/results - can download data from here. Note the data isn't openly licensed.
+  * IRENA (international renewable energy agency) https://www.irena.org/publications/2020/May/Tracking-SDG7-The-Energy-Progress-Report-2020 
+
+### other environmental data
+
+* center for ecology & hydrology (has data scientist position open): https://www.ceh.ac.uk/data/data-portals - e.g. biodiversity data, river flows, floods etc
+* OWID energy data https://github.com/owid/energy-data
+* OWID CO2 emissions data https://github.com/owid/co2-data 
+
+Consider also project drawdown strategy https://drawdown.org/discover
+
+### other open data
+
+* open data scot - lots of council datasets https://opendata.scot/datasets/ 
+
+### UK cycling data
+
+* Scotland traffic data - 
+  * accidents: casualties, circumstances (just location and road types) from police https://www.scotland.police.uk/about-us/how-we-do-it/road-traffic-collision-data/ (1 row = 1 incident)
+  * Transport scotland stats https://www.transport.gov.scot/our-approach/statistics/#42761
+  * **location data is in northing and easting (OGS), need to somehow map or match this to cycling stats**
+  * travel to work stats: https://opendata.scot/datasets/transport+scotland-travel+to+work+and+other+purposes/ 
+* Scotland accident summary report https://www.transport.gov.scot/media/53660/key-reported-road-casualties-scotland-2022.pdf
+  * includes data on progress towards 2030 targets: -50% reduction in fatalities, also reduction in pedestrian fatalaties
+* Cycling Scotland has lots of open data
+  * casualties https://opendata.scot/datasets/cycling+scotland-reported+cycling+casualties/
+  * Scotland cycling volume - real-time (hourly and daily) count of cyclists passing by monitoring stations, around Scotland, https://www.cycling.scot/what-we-do/making-cycling-better/cycling-open-data (see overview at https://usmart.io/org/cyclingscotland/discovery/discovery-view-detail/14227968-8ed5-4caf-a5cb-2dbc3539100f 0 locations.csv downloaded 19 August 2023, in lat and long)
+    * eg hourly cycling counts in glasgow https://opendata.scot/datasets/cycling+scotland-glasgow+city+council+-+hourly+cycling+counts+from+automatic+cycling+counters/ 
+* Sustrans walking and cycling index dashboard https://www.sustrans.org.uk/the-walking-and-cycling-index/ 18 regions/areas around UK but cannot download data
+  * includes Edinburgh and Glasgow
+  * data sources report -- nothing I could directly use here https://www.sustrans.org.uk/media/10522/walking-and-cycling-index-2021-data-sources-and-methodologies.pdf
+  
+
+Previous work has looked at 
+
+* glasgow cycling hire and weather 2014-2016: https://www.ubdc.ac.uk/making-impact/case-studies/using-weather-data-to-understand-usage-of-glasgow-s-cycle-hire-scheme/ (using met office observations)
+* EDA on road traffic accidents UK https://github.com/Atlas7/visualize-traffic-accidents-in-uk/blob/master/notebooks/Exploratory-Data-Analysis-Accidents-Dataset.ipynb and http://srisai85.github.io/UK_Accidents/UK_Accidents_github.html 
+
+
+### Weather data:
+
+* Met office - can't find easy open data, historic data archived...
+* Copernicus climate data https://cds.climate.copernicus.eu/#!/search?text=weather&type=dataset
+* **meteostat** https://meteostat.net/en/ open weather data e.g. has weather stations at glasgow airport, edinburgh airport, perth, dundee, etc, has a python library for easy access to data https://dev.meteostat.net/guide.html#our-services. Data is collated from open sources around the globe.
+* **open weather API** also has lots of weather data: https://openweathermap.org/api 
+* european climate assessment portal - can download data on different weather conditions (many countries) https://www.ecad.eu/utils/showselection.php?lrlfct1quiibjh77v8qmh80b80 --> many GB stations, including across Scotland https://knmi-ecad-assets-prd.s3.amazonaws.com/download/ECA_blend_station_tg.txt - has predefined datasets to download to (by each weather condition): https://www.ecad.eu/dailydata/predefinedseries.php#
+
+Urban Big Data Centre (Glasgow) has data portal: http://ubdc.gla.ac.uk/
+
+* Glasgow Bishopton weather station data - up to 2013 http://ubdc.gla.ac.uk/dataset/glasgow-bishopton-general-weather-station-data-1959-2013 - 1 row is one month, vars are temp, airfrost, rain, sun
+
+### eg cycling volume vs weather & season/weekend
+
+Can find weather stations on meteostat near enough to cycling monitor locations
+
+* calculate distance between two lat/long points - match station to cycling areas (and aggregate cycling counts as necessary)
+
+> You need Latitude and Longitude to calculate the distance between two locations with following formula:
+=acos(sin(lat1)*sin(lat2)+cos(lat1)*cos(lat2)*cos(lon2-lon1))*6371 (6371 is Earth radius in km.)
+-- source: https://community.fabric.microsoft.com/t5/Desktop/How-to-calculate-lat-long-distance/m-p/1491878/highlight/true#M618837 
+
+* use meteostat and opt-out of model data, use only observation data -- https://dev.meteostat.net/quality.html#observations-vs-model-data
+
+* check what the daily record means - not clear which aggregate being used https://dev.meteostat.net/quality.html#aggregation-methods
+
+* use python package https://pypi.org/project/meteostat/ 
+
+* is it a sensible question to suggest we might predict cycling activity according to weather forecast?
+
+* could also look at cycling activity by time of day etc, include daily weather data as one of many variables, with a col_saying which weather station from and distnace of weather station
+
+* combine multiple locations of data
+
+* map cycling station to nearest weather station using https://dev.meteostat.net/python/point.html#example or stations.nearby https://dev.meteostat.net/python/api/stations/nearby.html
+ * can see all stations in Scotland, e.g. https://dev.meteostat.net/python/api/stations/region.html#parameters (ISO code is GB-SCT)
+ 
+#### glasgow open data
+
+https://data.glasgow.gov.uk/
+
+* road safety incidents (slight/severe): https://data.glasgow.gov.uk/datasets/GlasgowGIS::road-safety-accidents/explore?showTable=true
+
+
+### hundred cricket analysis
+
+hundred men's https://www.kaggle.com/datasets/pardeep19singh/the-hundred-mens-2021-2022 
+and women's https://www.kaggle.com/datasets/pardeep19singh/the-hundred-womens-cricket-2021-2022 
+
+ball-by-ball data
+
+could do a predictor of ball outcome (wicket, runs/dot, byes, win - multiple output regression [https://machinelearningmastery.com/deep-learning-models-for-multi-output-regression/]) depending on ball number, bowler, teams, date, venue, receiving batter
+- merge with weather for that day?
+
+
+* test matches cricket data (1877 - 2022): https://www.kaggle.com/datasets/bong952/test-matches-played-from-1877-jan-2022 -- but it only has teams, ground, winner, margin at win (runs/wickets), not worth it
+* cricsheet is ball-by-ball data for many matches https://www.kaggle.com/datasets/veeralakrishna/cricsheet-a-retrosheet-for-cricket - but all in YAML format, needs joining
+  * someone made a T20 test predictor: https://www.kaggle.com/code/npspoofs/t20-match-prediction-and-model 
+  BUT very hard to work with YAML structure? see https://stackoverflow.com/questions/36459838/error-in-reading-yaml-files-as-data-frame-in-r -- except there is a yaml library in python, used in the above T20 test predictor model notebook
+  
+  Maybe possible, see here: https://python.land/data-processing/python-yaml
+  
+  See also: read_yaml {yaml} 
+  
+```{r}
+library(yaml)
+```
+  
+```{r}
+read_yaml("../wicket_predictor/896549.yaml")
+```
+```{r}
+yaml.load_file("../wicket_predictor/896549.yaml")
+```
+
+Someone wrote an R function for this cricsheet data already: https://rdrr.io/cran/yorkr/man/parseYamlOver.html
+
+
+
+### other ideas
+
+* kickstarter project success: model to predict success or failure based on type of project, goal, launch date, are there some kind of activity stats? https://www.kaggle.com/datasets/kemical/kickstarter-projects
+* hotel customer segmentation analysis: from a hotel in lisbon https://www.kaggle.com/datasets/nantonio/a-hotels-customers-dataset
+* datasets list for regression analysis https://www.kaggle.com/code/rtatman/datasets-for-regression-analysis
+  * including poisson regression analysis (for counts data) of bicycle bridge crossings in NYC https://www.kaggle.com/datasets/new-york-city/nyc-east-river-bicycle-crossings with weather
+  * also including linear reg prediction of ocean temp by salinity: https://www.kaggle.com/datasets/sohier/calcofi 
+* NatureScot marine data - e.g. loch conditions and wildlife, https://www.nature.scot/information-hub/naturescot-data-services 
+* seabirds monitoring: https://jncc.gov.uk/our-work/ukbi-c5-birds-of-the-wider-countryside-and-at-sea/
+* tfl bike hires since 2010 https://data.london.gov.uk/dataset/number-bicycle-hires -- map to london weather data from kaggle? -- but the tfl data is in poor excel format, daily and monthly numbers, monthly average duration of hire
+* animal thefts in london - >5000 records, recovered/not recovered, method of theft, date, year/month, type of animal & count, london borough https://data.london.gov.uk/dataset/mps-stolen-animals-dashboard-data --from Jan 2010 to Jul 2023
+
+* h&m purchasing prediction (from competition): https://www.kaggle.com/competitions/h-and-m-personalized-fashion-recommendations/data
+* ecuador store purchasing prediction (live competition): https://www.kaggle.com/competitions/store-sales-time-series-forecasting/
+* GoDaddy microbusiness rates forecasting https://www.kaggle.com/competitions/godaddy-microbusiness-density-forecasting 
+
+* eurovision song contest data https://www.kaggle.com/datasets/diamondsnake/eurovision-song-contest-data 
+  * pretty cool analysis here: https://www.kaggle.com/code/jeleandro/network-analysis-applied-to-eurovision 
+
+### animal thefts
+
+decision tree for prob recovery?
+
+data source: https://data.london.gov.uk/dataset/mps-stolen-animals-dashboard-data (accessed 19 august 2023)
+
+```{r}
+library(tidyverse)
+animal_thefts <- read_csv("../stolen_animals/MPS Stolen animals dashboard data - July 2023.csv") %>% 
+  janitor::clean_names()
+```
+
+```{r}
+animal_thefts %>%
+  skimr::skim()
+```
+
+```{r}
+animal_thefts %>% 
+  group_by(type_of_animal) %>% count() 
+```
+
+some cleaning to do eg cat --> Cat, FIsh --> Fish
+remove Mammal/mammal rows (might duplicate the other types)
+
+```{r}
+animal_thefts %>% 
+  mutate(recovered = if_else(animal_recovered == "Recovered", 1, 0)) %>% 
+  group_by(type_of_animal) %>% 
+  summarise(prop_recovered = sum(recovered)/n()) 
+```
+
+
+
+
+
+
+
