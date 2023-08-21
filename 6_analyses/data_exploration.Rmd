@@ -1,0 +1,247 @@
+---
+title: "Initial data exploration"
+output: html_notebook
+---
+
+This notebook contains code and output from exploring the data to inform cleaning steps and analysis process.
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(lubridate)
+library(GGally)
+library(psych)
+```
+
+# Load and inspect data
+
+## Daily energy data
+
+Dataset 1, from https://www.kaggle.com/datasets/emmanuelfwerr/london-homes-energy-data.
+
+```{r}
+daily_energy <- read_csv("../3_raw_data/london_energy.csv") %>% 
+  janitor::clean_names()
+```
+
+```{r}
+skimr::skim(daily_energy)
+```
+
+No missing values in kaggle aggregated energy data
+
+### Averaging daily energy consumption (across all households)
+
+Not sure if mean is appropriate measure here, let's look at histogram of energy consumption values of every household on a single date:
+
+```{r}
+daily_energy %>% 
+  select(date)
+```
+
+```{r}
+# boxplot on 2012-12-31
+daily_energy %>%
+  filter(date == "2012-12-31") %>% 
+  ggplot(aes(x = kwh)) + 
+  geom_boxplot()
+
+# histogram on 2012-12-31
+daily_energy %>%
+  filter(date == "2012-12-31") %>% 
+  ggplot() + 
+  geom_histogram(aes(x = kwh), bins = 150)
+```
+
+Energy consumption on an individual date, frequency of households, is not normally distributed but right-skewed. Median may be a better average daily measure than mean.
+
+
+### Energy consumption patterns over all households
+
+```{r}
+# median
+daily_energy %>% 
+  group_by(date) %>% 
+  mutate(median_kwh = median(kwh)) %>% 
+  ggplot(aes(x = date, y = median_kwh)) +
+  geom_line()
+```
+
+
+```{r}
+# mean
+daily_energy %>% 
+  group_by(date) %>% 
+  mutate(mean_kwh = mean(kwh)) %>% 
+  ggplot(aes(x = date, y = mean_kwh)) +
+  geom_line()
+```
+
+Definitely some seasonality in energy consumption, whichever average used.
+
+
+### Energy consumption patterns within households
+
+Let's look at a few individual households:
+
+```{r}
+daily_energy %>% 
+  distinct(lc_lid)
+```
+
+```{r}
+daily_energy %>% 
+  filter(lc_lid %in% c("MAC000002", "MAC000058", "MAC000359", "MAC000714", "MAC000933", "MAC000997")) %>% 
+  ggplot(aes(x = date, y = kwh, colour = lc_lid)) +
+  geom_line() +
+  facet_wrap(~lc_lid)
+```
+
+Can already see households are behaving differently, some high consumers, others less so; some change over the year, some less so.
+
+Might want to use a rolling average here, e.g. 7-day, to give a smoother line.
+
+```{r}
+# tbc rolling average
+```
+
+### types of household (by consumption patterns)
+
+look to see if there are obvious high/medium/low consumer groups
+
+```{r}
+household_alltime_consumption <- daily_energy %>% 
+  group_by(lc_lid) %>% 
+  summarise(alltime_median_kwh = median(kwh),
+            alltime_mean_kwh = mean(kwh))
+```
+
+```{r}
+household_alltime_consumption
+```
+
+```{r}
+household_alltime_consumption %>% 
+  ggplot() +
+  geom_histogram(aes(x = alltime_median_kwh), bins = 200)
+```
+
+Look at january or july dates only, when there may be more variation in usage (cold and hot weather)
+
+```{r}
+household_jan_jul_consumption <- daily_energy %>% 
+  mutate(month = month(date, label = TRUE, abbr = FALSE)) %>% 
+  filter(month %in% c("January","July")) %>% 
+  group_by(lc_lid, month) %>% 
+  summarise(median_kwh = median(kwh),
+            mean_kwh = mean(kwh))
+```
+
+```{r}
+# january medians
+household_jan_jul_consumption %>% 
+  filter(month == "January") %>% 
+  ggplot() +
+  geom_histogram(aes(x = median_kwh), bins = 200)
+
+# july medians
+household_jan_jul_consumption %>% 
+  filter(month == "July") %>% 
+  ggplot() +
+  geom_histogram(aes(x = median_kwh), bins = 200)
+```
+
+Most households have median daily consumption in range 0-20 kWh in both January and July.
+
+```{r}
+household_jan_jul_consumption %>% 
+  ggplot() +
+  geom_boxplot(aes(x = month, y = median_kwh))
+```
+
+Maybe energy consumption in January is slightly more than in July. Could test this. Long tail of high energy consumers.
+
+No obvious groups to split into, but could label households above Q3 as "high consumers", below Q1 as "low consumers", and rest as "medium consumers".
+
+```{r}
+all_kwh_stats <- daily_energy %>% 
+  select(kwh) %>% 
+  skimr::skim()
+
+all_kwh_stats %>% 
+  colnames()
+
+kwh_q1 <- all_kwh_stats %>% 
+  select(numeric.p25) %>% 
+  pull()
+
+kwh_q3 <- all_kwh_stats %>% 
+  select(numeric.p75) %>% 
+  pull()
+
+kwh_q1
+kwh_q3
+```
+Note these are calculated from all dates, not adjusted for jan/july/seasonality and note the date range covers more winters (3) than summers (2).
+
+```{r}
+# add household type, can be used as lookup key-value (join with full data)
+household_alltime_consumption <- household_alltime_consumption %>% 
+  mutate(household_consumption_level = case_when(
+    alltime_median_kwh >= kwh_q3 ~ "high",
+    alltime_median_kwh > kwh_q1 ~ "average",
+    alltime_median_kwh <= kwh_q1 ~ "low",
+    .default = NA_character_
+  ),
+  household_consumption_level = factor(household_consumption_level, levels = c("low", "average", "high")))
+```
+
+```{r}
+household_alltime_consumption %>% 
+  ggplot() +
+  geom_boxplot(aes(x = household_consumption_level, y = alltime_median_kwh))
+```
+
+```{r}
+household_alltime_consumption %>% 
+  summarise(count = n(), .by = household_consumption_level)
+```
+
+Seems like a potentially useful split of data
+
+```{r}
+daily_energy_processed <- left_join(daily_energy, household_alltime_consumption, by = "lc_lid")
+
+daily_energy_processed
+```
+
+Look at median energy over time by type:
+
+```{r}
+daily_energy_processed_medians <- daily_energy_processed %>% 
+  group_by(date, household_consumption_level) %>% 
+  summarise(median_kwh = median(kwh)) 
+
+daily_energy_processed_medians %>% 
+  arrange(date)
+
+daily_energy_processed_medians %>% 
+  ggplot() +
+  geom_line(aes(x = date, y = median_kwh, colour = household_consumption_level))
+```
+
+There may be a way to group households by consumption in an unsupervised way, i.e. by clustering instead.. tbc
+
+## Daily weather data
+
+Dataset 2, from https://www.kaggle.com/datasets/emmanuelfwerr/london-weather-data.
+
+
+
+Ideas:
+
+* types of household - look to see if there are any groups by patterns of consumption (not just overall high/low but variable v fixed over time) - try clustering?
+* types of weather days - see if there are clusters of temperature, precipitation, cloud cover, sunshine etc --> categories "mild cloudy rainy day" etc
+* convert datetime to season, month, day, weekday
+
+
