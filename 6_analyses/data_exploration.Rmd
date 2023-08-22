@@ -9,13 +9,15 @@ This notebook contains code and output from exploring the data to inform cleanin
 library(tidyverse)
 library(ggplot2)
 library(lubridate)
-library(GGally)
-library(psych)
+library(GGally) # for ggpairs to explore correlations
+library(psych) # for pairplots to explore correlations
 ```
 
 # Load and inspect data
 
 ## Daily energy data
+
+_Aug 21_
 
 Dataset 1, from https://www.kaggle.com/datasets/emmanuelfwerr/london-homes-energy-data.
 
@@ -28,16 +30,19 @@ daily_energy <- read_csv("../3_raw_data/london_energy.csv") %>%
 skimr::skim(daily_energy)
 ```
 
+3510433 rows x 3 cols
+
+Rows are one date and one household value. 5,566 households over 829 days (2011-11-23 to 2014-02-28)
+
 No missing values in kaggle aggregated energy data
 
-### Averaging daily energy consumption (across all households)
+### Energy consumption patterns over all households
+
+#### averaging daily energy consumption (across all households)
+
+_Aug 21_ 
 
 Not sure if mean is appropriate measure here, let's look at histogram of energy consumption values of every household on a single date:
-
-```{r}
-daily_energy %>% 
-  select(date)
-```
 
 ```{r}
 # boxplot on 2012-12-31
@@ -55,8 +60,9 @@ daily_energy %>%
 
 Energy consumption on an individual date, frequency of households, is not normally distributed but right-skewed. Median may be a better average daily measure than mean.
 
+#### simple lines
 
-### Energy consumption patterns over all households
+_Aug 21_
 
 ```{r}
 # median
@@ -79,8 +85,146 @@ daily_energy %>%
 
 Definitely some seasonality in energy consumption, whichever average used.
 
+#### Rolling average
+
+_August 22_ 
+
+See classnotes wk7 day 1 (new notes in codeclan_work/flipped... folder) - use package `slider`
+
+First need to convert data to tsibble:
+
+```{r}
+library(tsibble)
+library(slider)
+```
+```{r}
+# convert data to tsibble
+daily_energy_ts <- as_tsibble(daily_energy, key = lc_lid, index = date)
+```
+
+```{r}
+index_var(daily_energy_ts)
+```
+
+```{r}
+key_vars(daily_energy_ts)
+```
+
+To make rolling average for whole dataset, first find median of all values on a each date (because values are not normally distributed on a single date in December, see above, skewed), then do mean across a 14-day window (set as 7 before, 6 after, only show for complete range).
+
+```{r}
+# make df with median for each day
+median_all_daily_energy_ts <- daily_energy_ts %>% 
+  index_by(date) %>% 
+  summarise(median_kwh = median(kwh))
+```
+
+
+```{r}
+# calc rolling 14-day mean
+median_all_daily_energy_ts <- median_all_daily_energy_ts %>% 
+  mutate(kwh_moving_avg = slide_dbl(
+    .x = median_kwh,
+    .f = ~ mean(.),
+    .before = 7,
+    .after = 6, # 14-day rolling average
+    .complete = TRUE
+  ))
+```
+
+```{r}
+median_all_daily_energy_ts %>% 
+  ggplot() + 
+  geom_line(aes(x = date, y = median_kwh), colour = "grey") + 
+  geom_line(aes(x = date, y = kwh_moving_avg), colour = "red") +
+  theme_minimal()
+```
+
+Need to look at seasonal decomposition.
+
+#### Seasonal decomposition
+
+_Aug 22_
+
+```{r}
+library(feasts)
+```
+
+Use the median values
+
+```{r}
+median_all_daily_energy_ts %>% 
+  autoplot(median_kwh) +
+  xlab("Date") + ylab("Median daily energy consumption (kWh)")
+```
+
+Interpret:
+
+* looks like higher energy usage in winter months (Dec-Feb), lower in summer months (Jun-Aug) with increase/decrease in between
+* this pattern repeats over the 2.5 years data we have available (3 winters, 2 summers)
+* there is fluctuation within these times too - a weekly pattern?
+
+```{r}
+# look at seasonal pattern
+median_all_daily_energy_ts %>% 
+  gg_season(median_kwh)
+```
+
+Seasonal pattern is consistent year-on-year. Maybe 2014 looks like slightly lower usage? Also note some higher variability in winter 2011 data.
+Need to remove last date because values are off? And first date too?
+
+##### trend: weekdays
+
+Look at subseries:
+
+Can see trend for every weekday - does look like Sat & Sun are higher.
+```{r}
+median_all_daily_energy_ts %>% 
+  gg_subseries(y = median_kwh, period = 7)
+```
+##### UPDATE FROM HERE
+
+```{r}
+# look only at winter months
+daily_energy_ts %>% 
+  mutate(quarter = quarter(date, type = "date_first", fiscal_start = 12)) %>% 
+  arrange(quarter) %>% 
+  index_by(lc_lid) %>% 
+  summarise(median_kwh = median(kwh))
+
+  update_tsibble(key = lc_lid, index = quarter)
+  
+  filter_index(month(date) %in% c(12,1,2))
+  gg_subseries(y = median_kwh, period = 7)
+```
+
+
+When looking for subseries, first change index to season (using quarter) - this doesn't work for subseries, need it to be date format
+
+```{r}
+quarterly_energy_ts <- daily_energy_ts %>% 
+  # make quarters where Dec is in Q1 of year (adjusted as season not real quarter)
+  mutate(quarter = quarter(date, type = "date_first", fiscal_start = 12)) %>% 
+  
+  update_tsibble(key = NULL, index = quarter) 
+
+index_var(quarterly_energy_ts)
+
+
+%>%
+  update_tsibble(key = lc_lid, index = quarter) %>% 
+   index_by(quarter) 
+  group_by(lc_lid) %>% 
+  summarise(median_kwh_perhh = median(kwh))
+  gg_subseries(median_kwh)
+```
+
 
 ### Energy consumption patterns within households
+
+#### Individal households
+
+_Aug 21_
 
 Let's look at a few individual households:
 
@@ -99,13 +243,13 @@ daily_energy %>%
 
 Can already see households are behaving differently, some high consumers, others less so; some change over the year, some less so.
 
-Might want to use a rolling average here, e.g. 7-day, to give a smoother line.
+Might want to use a rolling average here, e.g. 7-day, to give a smoother line (as above!)
 
-```{r}
-# tbc rolling average
-```
+Might also want to consider if there are "types" of household to split the data by, e.g. according to how variable they are in a year, their level of consumption (high/low) - see more below.
 
-### types of household (by consumption patterns)
+#### types of household (by consumption patterns)
+
+_Aug 21_
 
 look to see if there are obvious high/medium/low consumer groups
 
