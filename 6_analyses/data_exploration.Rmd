@@ -34,7 +34,20 @@ skimr::skim(daily_energy)
 
 Rows are one date and one household value. 5,566 households over 829 days (2011-11-23 to 2014-02-28)
 
-No missing values in kaggle aggregated energy data
+No missing values in kaggle aggregated energy data 
+
+_Aug 23_
+
+BUT there are missing values because only households with values on a date are included, not every household has values for every date in range. See below section on CLEANING household data.
+
+```{r}
+# check for duplicates -- NONE
+daily_energy %>% 
+  group_by(lc_lid, date) %>% 
+  summarise(count = n()) %>% 
+  filter(count > 1)
+```
+No duplicates.
 
 ### Energy consumption patterns over all households
 
@@ -97,6 +110,7 @@ First need to convert data to tsibble:
 library(tsibble)
 library(slider)
 ```
+
 ```{r}
 # convert data to tsibble
 daily_energy_ts <- as_tsibble(daily_energy, key = lc_lid, index = date)
@@ -295,7 +309,7 @@ household_jan_jul_consumption %>%
   geom_histogram(aes(x = median_kwh), bins = 200)
 ```
 
-Most households have median daily consumption in range 0-20 kWh in both January and July.
+Most households have median daily consumption in range 0-30kWh in January and 0-20 kWh in July, indicating energy usage is highest in winter
 
 ```{r}
 household_jan_jul_consumption %>% 
@@ -376,16 +390,886 @@ daily_energy_processed_medians %>%
 
 There may be a way to group households by consumption in an unsupervised way, i.e. by clustering instead.. tbc
 
+#### finding example households
+
+_Aug 23_
+
+##### CLEAN: missing data and zero values
+
+```{r}
+# find households with the 10 lowest kwh scores
+daily_energy_processed %>% 
+  arrange(kwh) %>% 
+  head(10)
+```
+
+Arranging by kwh low to high shows lots of zeros -- investigate:
+```{r}
+hholds_zero_values <- daily_energy_processed %>% 
+  filter(kwh == 0) %>%  # 15,168 rows
+  summarise(count = n(), .by = lc_lid) %>% 
+  arrange(desc(count))
+
+hholds_zero_values
+```
+
+308 households with 0 values. 
+
+```{r}
+hholds_zero_values %>% 
+  ggplot() +
+  geom_col(aes(x = lc_lid, y = count))
+```
+
+```{r}
+hholds_with_zeros <- hholds_zero_values %>% 
+  pull(lc_lid)
+
+daily_energy_processed %>% 
+  filter(lc_lid %in% hholds_with_zeros) %>% 
+  mutate(zero_kwh_value = if_else(kwh == 0, T, F), .before = kwh) %>% 
+  ggplot() +
+  geom_line(aes(x = date, y = zero_kwh_value, group = lc_lid), alpha = 0.2, colour = "grey")
+```
+
+```{r}
+daily_energy_processed %>% 
+  filter(lc_lid %in% hholds_with_zeros) %>% 
+  mutate(zero_kwh_value = if_else(kwh == 0, T, F), .before = kwh) %>% 
+  ggplot() +
+  geom_point(aes(x = date, y = zero_kwh_value), colour = "grey", alpha = 0.1)
+```
+Maybe some households weren't collecting data / didn't join until later in the period. 
+
+```{r}
+daily_energy_processed %>% 
+  filter(date > "2013-01-01" & kwh == 0) # still 10,500 zeroes
+```
+
+```{r}
+daily_energy_processed %>% 
+  distinct(date)
+```
+
+829 days
+
+Note no households are all zero values though, highest number of zeroes is 789 days.
+
+Could drop households that have a zero value for more than 40% days in the time range, since we are interested in estimating/understanding energy usage, and zero kwh indicates something else is going on here.
+
+```{r}
+0.4*829
+```
+
+So: Remove the 10 hholds with >= 331 zero values (i.e 40% or more days with 0 kwh):
+
+```{r}
+missing_data_hholds <- daily_energy_processed %>% 
+  filter(kwh == 0) %>%  # 15,168 rows
+  summarise(count = n(), .by = lc_lid) %>% 
+  filter(count >= 331) %>% 
+  pull(lc_lid)
+
+missing_data_hholds
+```
+
+Could impute with each household's median kwh value for that month and if weekday or weekend. OR could drop these households (remember we have 5500!)
+
+Ideally, try both approaches and see which gives better result
+
+```{r}
+# add date factors
+daily_energy_trim <- daily_energy_processed %>% 
+  # remove households with 40%+ dates with zero kwh values
+  filter(!lc_lid %in% missing_data_hholds) %>% 
+  mutate(weekday = wday(date, label = TRUE), .after = date) %>% 
+  mutate(is_weekend = if_else(weekday %in% c("Sat","Sun"), T, F), .after = weekday) %>%
+  mutate(yearmonth = zoo::as.yearmon(date), .after = date) %>% 
+  mutate(month = month(date, label = FALSE), .after = date) %>% 
+  mutate(quarter = quarter(date, type = "date_first", fiscal_start = 12), .after = date) %>% 
+  mutate(yearseason = case_when(
+    quarter == "2011-09-01" ~ "Autumn 2011",
+    quarter == "2011-12-01" ~ "Winter 2011",
+    quarter == "2012-03-01" ~ "Spring 2012",
+    quarter == "2012-06-01" ~ "Summer 2012",
+    quarter == "2012-09-01" ~ "Autumn 2012",
+    quarter == "2012-12-01" ~ "Winter 2012",
+    quarter == "2013-03-01" ~ "Spring 2013",
+    quarter == "2013-06-01" ~ "Summer 2013",
+    quarter == "2013-09-01" ~ "Autumn 2013",
+    quarter == "2013-12-01" ~ "Winter 2013",
+    .default = NA_character_
+  ), .after = quarter) %>% 
+  mutate(yearseason = factor(yearseason, levels = c(
+    "Autumn 2011", "Winter 2011", "Spring 2012", "Summer 2012",
+    "Autumn 2012", "Winter 2012", "Spring 2013", "Summer 2013",
+    "Autumn 2013", "Winter 2013")))
+```
+
+So, daily_energy_trim has 10 fewer households (5,557?)
+
+Check weekdays: 
+* 28 feb 2014 was a friday - yes
+* 12 oct 2012 was also a friday - yes
+* check yearseason arranges in correct order - yes
+
+```{r}
+daily_energy_trim %>% 
+  filter(kwh == 0) # now 9,633 zero values
+```
+
+
+```{r}
+# impute missing kwh values with median value for that hhold that yearseason and wday type
+daily_energy_imputed <- daily_energy_trim %>% 
+  mutate(zero_kwh_value = if_else(kwh == 0, T, F), .before = kwh) %>% 
+  group_by(lc_lid, yearseason, is_weekend) %>% 
+  mutate(hh_avg_season_wday = mean(kwh), .after = kwh) %>% 
+  ungroup() %>% 
+  mutate(kwh_imputed = if_else(kwh == 0, hh_avg_season_wday, kwh), .before = kwh)
+```
+
+``` {r}
+daily_energy_imputed  %>% 
+  filter(zero_kwh_value == T) # 9,633 values needed imputing 
+
+daily_energy_imputed  %>% 
+  filter(zero_kwh_value == T & kwh_imputed == 0)
+# using median: 4,648 values remain
+# using mean: 807 zero values remain
+
+
+## before removing the 10 hholds with 40%+ zero days
+# 15,168 values were zero
+# using median: 10,037 zero values remain after trying to impute with median for wday & season per hhold
+# using mean: 3,195 zero values remain - use mean!
+```
+
+So daily_energy_imputed cleaning steps:
+* remove 10 households with 40%+ days with zero kWh -- these are unusual cases, maybe indicate getting energy from elsewhere, or properties not being lived in much, or something not working with their smart meter
+* impute remaining zeroes using the mean kwh for that household in that season and according to weekday/weekend type
+* 807 zero values remain in the data, leave them in, low % of the total 3,503,867 observations (0.02%)
+
+```{r}
+100*807/nrow(daily_energy_imputed)
+```
+
+what does the data look like now for a household with some zeroes imputed?
+
+"MAC002050" had 316 zeroes, so not removed.
+"MAC002072" had 303.
+
+```{r}
+# check households with lots of zero values MAC000197, MAC004067, MAC000037
+daily_energy_imputed %>% 
+  filter(lc_lid %in% c("MAC002050", "MAC002072")) %>%
+  ggplot(aes(x = date, group = lc_lid)) +
+  geom_line(aes(y = kwh), colour = "blue", linetype = 1) +
+  geom_line(aes(y = kwh_imputed), colour = "red", linetype = 1) +
+  facet_wrap(~ lc_lid, ncol = 1)
+```
+
+Actually, there are whole periods of zeroes -- these should also be removed
+
+```{r}
+hholds_zero_values %>% 
+  filter(!lc_lid %in% missing_data_hholds) # filter for hholds not already removed
+```
+
+e.g. MAC003707, MAC002771 have 100 zeroes; MAC001655 has 78 zeroes; MAC004756 has 41
+
+```{r}
+daily_energy_imputed %>% 
+  filter(lc_lid %in% c("MAC003707", "MAC002771", "MAC001655", "MAC004756")) %>%
+  ggplot(aes(x = date, group = lc_lid)) +
+  geom_line(aes(y = kwh), colour = "blue", linetype = 1) +
+  geom_line(aes(y = kwh_imputed), colour = "red", linetype = 1) +
+  facet_wrap(~ lc_lid, ncol = 1)
+```
+
+* MAC001655 has small periods of zeroes every now and then - possible these are holiday / non-residential periods when they turn everything off, looks like a real scenario, imputations don't look bad for the data
+* MAC002771 has a whole chunk of zeros, and low values throughout
+* MAC003707 -- chunks of zero values, does not look reliable
+* MAC004756 -- clearly missing lots of data after a point, should have more than that number of 0s...
+
+##### restart CLEANING
+
+Check that each household has full 829 days
+
+```{r}
+daily_energy_processed %>% 
+  group_by(lc_lid) %>% 
+  summarise(count = n()) %>% 
+  filter(count < 829)
+```
+
+5,555 of the 5,566 households do not have complete data for the whole time period! i.e. only 11 households have data for the whole time.
+
+What is the threshold at which I don't include a household?
+
+Reasonably, a year's worth of data is sufficient for modelling weather and energy interactions...
+
+```{r}
+hholds_lt1y <- daily_energy_processed %>% 
+  group_by(lc_lid) %>% 
+  summarise(count = n()) %>% 
+  filter(count < 365) %>% 
+  pull(lc_lid)
+
+hholds_lt1y
+```
+
+182 households have less than 365 days' worth of data, in the 829-day period.
+
+```{r}
+daily_energy_processed %>% 
+  filter(!lc_lid %in% hholds_lt1y) %>% 
+  filter(kwh == 0) %>%  # 14,019 zero kWh values
+  summarise(num_zeros = n(), .by = lc_lid) %>% 
+  arrange(desc(num_zeros)) # 246 hholds have zero values
+```
+
+Repeat the cleaning steps above
+
+```{r}
+hholds_zero_values2 <- daily_energy_processed %>% 
+  filter(!lc_lid %in% hholds_lt1y) %>% 
+  filter(kwh == 0) %>%  # 14,019 zero kWh values
+  summarise(num_zeros = n(), .by = lc_lid) %>% 
+  arrange(desc(num_zeros))
+
+hholds_zero_values2
+```
+
+308 households with 0 values, 246 if remove the hholds with less than 365 days' data
+
+```{r}
+hholds_zero_values2 %>% 
+  filter(num_zeros <= 30)
+```
+
+164 hholds have 30 or fewer zero values
+
+```{r}
+total_days = as.numeric(max(daily_energy$date) - min(daily_energy$date) + 1)
+
+hhold_stats <- daily_energy_processed %>% 
+  mutate(zero_kwh = if_else(kwh == 0, T, F)) %>% 
+  group_by(lc_lid) %>%
+  summarise(num_values = n(),
+            num_zeros = sum(zero_kwh),
+            min_value = min(kwh),
+            max_value = max(kwh),
+            range = range(kwh),
+            median_kwh = median(kwh),
+            iqr = IQR(kwh),
+            mean_kwh = mean(kwh),
+            sd = sd(kwh)
+            ) %>% 
+  mutate(pc_missing = (100 * (total_days - num_values) / total_days), .after = lc_lid) %>% 
+  mutate(pc_zeros = (100 * num_zeros / num_values), .after = pc_missing) %>% 
+  ungroup()
+
+hhold_stats %>% 
+  arrange(desc(pc_missing))
+  
+hhold_stats %>% 
+  arrange(desc(pc_zeros))
+```
+```{r}
+hhold_stats %>% 
+  ggplot() +
+  geom_point(aes(x = pc_missing, y = pc_zeros))
+```
+
+```{r}
+hhold_stats %>% 
+  ggplot() +
+  geom_histogram(aes(x = pc_missing), bins = 100)
+```
+
+```{r}
+hhold_stats %>% 
+  ggplot() +
+  geom_histogram(aes(x = pc_zeros), bins = 100)
+```
+
+```{r}
+hhold_stats %>% 
+  filter(pc_zeros == 100) # 12 households with only zero values, remove these
+```
+
+```{r}
+hhold_stats %>% 
+  filter(pc_zeros > 10)
+```
+
+146 households with > 10% values as 0 kWh
+
+0 kWh could be real, e.g. on holiday/out of house and everything switched off, or even if have solar panels and switch to only using that on sunny days (could look at high sun low energy days)
+
+But overall, lots of 0 values is not useful for modelling change in energy usage, most households don't have so many zeroes - so just remove these households, can't explain them right now
+
+```{r}
+hholds_10pc_zero <- hhold_stats %>% 
+  filter(pc_zeros > 10) %>% 
+  pull(lc_lid)
+
+hholds_10pc_zero
+```
+
+```{r}
+hhold_stats %>% 
+  filter(!lc_lid %in% hholds_10pc_zero) %>% 
+  filter(median_kwh == 0)
+```
+
+36 households with median of 0 --> indicates not useful data?
+None of these once the >10pc zero hholds removed
+
+```{r}
+hholds_180obs <- hhold_stats %>% 
+  filter(!lc_lid %in% hholds_10pc_zero) %>% 
+  filter(num_values < 180) %>% 
+  pull(lc_lid)
+
+hholds_180obs
+```
+38 more households have fewer than 180 days' worth of data, remove these.
+Can't guarantee these are consecutive days, but 6 months' worth of data should give enough variability in weather.
+Imagine making a model per household - 180 values would be enough I think.
+
+Cleaning households data:
+
+* zero values:
+  * **remove 146 hholds with >10% zero values**
+  * what else would seem real versus unusual? could add a factor that is an indicator of num_zeros, in case need to remove a group
+* number of values (i.e. missing data): 
+   * remove those below a threshold: how much do we need in order to start characterising a household, maybe 180 days (6 months) worth? **remove households with less than 180 observations**
+  * for remainder: could also add a factor that is indicator of amount of data for that household, in case need to factor in reliability or coverage
+  
+  
+### cleaning for specific dates
+
+2014-02-28 has v low median value (at end of ts) - unusal, remove
+```{r}
+daily_energy %>% 
+  filter(date == "2014-02-28") # 4,987 obs, so most households
+```
+
+```{r}
+daily_energy %>% 
+  filter(date == "2011-11-23") # start_date
+```
+Start date has only 13 households
+
+Consider cleaning for dates that have minimum 50 households?
+
+```{r}
+num_hholds_by_date <- daily_energy %>% 
+  group_by(date) %>% 
+  summarise(num_hholds = n())
+num_hholds_by_date
+```
+
+```{r}
+num_hholds_by_date %>% 
+  ggplot() +
+  geom_line(aes(x = date, y = num_hholds))
+```
+Check for cleaned date that removed households with little data:
+
+```{r}
+num_hholds_by_date_clean <- daily_energy_clean %>% 
+  group_by(date) %>% 
+  summarise(num_hholds = n())
+num_hholds_by_date_clean
+```
+
+```{r}
+num_hholds_by_date_clean %>% 
+  ggplot() +
+  geom_line(aes(x = date, y = num_hholds))
+```
+
+What is minimal number of households to take a median from? 200?
+
+That would remove 19 dates (i.e. start from 2011-12-12)
+
+```{r}
+num_hholds_by_date_clean %>% 
+  filter(num_hholds <200)
+```
+
+Or if start from 2011-12-01:
+
+```{r}
+num_hholds_by_date_clean %>% 
+  filter(date >= "2011-12-01") %>% 
+  arrange(num_hholds)
+```
+
+Lowest value on a single day would be 91 households. That seems ok.
+
+Start from 2011-12-01 - and also do this for weather_data.
+
+
+## household energy cleaning
+
+Remember other processing I could add in:
+
+* `daily_energy_trim` code chunk has steps to add in date values like weekday, season, etc - useful for model too.
+* `daily_energy_processed` has computed alltime medians etc for comparison
+* `daily_energy_imputed` has remaining zeros imputed using median values for that season and weekday type -- if zeroes seem unreal
+* `daily_energy_ts` - is a tsibble version
+* `daily_energy_rolling_median` - has 14-day moving average for plotting as timeseries
+
+
+```{r}
+daily_energy_clean <- daily_energy %>% 
+  filter(!lc_lid %in% hholds_10pc_zero) %>% 
+  filter(!lc_lid %in% hholds_180obs) %>% 
+  filter(date >= "2011-12-01" & date < "2014-02-28")
+  # start in Winter 2011 (91 households by that point)
+  # and remove last date, very low median value (unusual)
+
+num_hholds_og <- length(unique(daily_energy$lc_lid))
+num_hholds_clean <- length(unique(daily_energy_clean$lc_lid))
+
+num_hholds_og
+num_hholds_clean
+num_hholds_og - num_hholds_clean
+100* (num_hholds_og - num_hholds_clean) / num_hholds_og
+```
+
+92 households (1.6%) removed from data, leaving 5,474 households in "cleaned" data.
+
+#### Household stats
+
+##### re-run household summary stats on clean
+
+```{r}
+total_days = as.numeric(max(daily_energy$date) - min(daily_energy$date) + 1)
+
+hhold_stats <- daily_energy_clean %>% 
+  mutate(zero_kwh = if_else(kwh == 0, T, F)) %>% 
+  group_by(lc_lid) %>%
+  summarise(num_values = n(),
+            num_zeros = sum(zero_kwh),
+            min_value = min(kwh),
+            max_value = max(kwh),
+            range = range(kwh),
+            median_kwh = median(kwh),
+            iqr = IQR(kwh),
+            mean_kwh = mean(kwh),
+            sd = sd(kwh)
+            ) %>% 
+  mutate(pc_missing = (100 * (total_days - num_values) / total_days), .after = lc_lid) %>% 
+  mutate(pc_zeros = (100 * num_zeros / num_values), .after = pc_missing) %>% 
+  ungroup()
+
+hhold_stats %>% 
+  arrange(desc(pc_missing))
+  
+hhold_stats %>% 
+  arrange(desc(pc_zeros))
+```
+
+```{r}
+hhold_stats %>% 
+  ggplot() + 
+  geom_point(aes(x = pc_missing, y = pc_zeros))
+```
+
+```{r}
+hhold_stats %>% 
+  ggplot() +
+  geom_histogram(aes(x = pc_missing), bins = 100)
+```
+
+```{r}
+hhold_stats %>% 
+  ggplot() +
+  geom_histogram(aes(x = pc_zeros), bins = 100)
+```
+
+
+##### look at hhold stats
+
+```{r}
+# median by range - profile of variance
+hhold_stats %>% 
+  filter(median_kwh != 0) %>% 
+  ggplot() +
+  geom_point(aes(x = median_kwh, y = iqr))
+```
+
+```{r}
+hhold_stats %>% 
+  filter(median_kwh != 0) %>% 
+  ggplot() +
+  geom_point(aes(x = max_value, y = median_kwh))
+```
+
+Doesn't look like groups
+
+```{r}
+hhold_stats %>% 
+  filter(median_kwh != 0) %>% 
+  ggplot() +
+  geom_point(aes(x = max_value, y = min_value))
+```
+Does look like there may be correlations, and maybe some groups could be made here
+
+* low min & max
+* low min & higher max (e.g. > 100)
+* ~~low max & higher min (e.g. > 2)~~ not this one
+* higher min & max
+
+_todo_ could look at ratio of max/min as delta_change
+
+```{r}
+# check for min of 0
+hhold_stats %>% 
+  filter(min_value == 0) # 454 rows
+```
+
+```{r}
+# check for max of 0
+hhold_stats %>% 
+  filter(max_value == 0)
+# 0 households
+```
+
+Calculate change as (max-min) or range / max (because max != 0)
+
+```{r}
+hhold_stats %>% 
+  mutate(delta = range / max_value) %>% 
+  ggplot() +
+  geom_point(aes(x = max_value, y = delta))
+```
+
+there is a shape here - low max_value households have higher delta (i.e. more reactive/changeable)
+
+```{r}
+hhold_stats %>% 
+  filter(min_value != 0)
+```
+
+No, 10,546 still have min of 0 so their range/max will be 1
+
+Try a measure of change being IQR / max
+
+```{r}
+hhold_stats %>% 
+  mutate(delta = iqr / max_value) %>% 
+  ggplot() +
+  geom_point(aes(x = max_value, y = delta))
+```
+
+Could be some groups here, beyond the main cluster - there are hholds with high max values and low delta, suggesting that they remain high energy users regardless (i.e. not much change)
+
+others are low max value and higher delta, indicating they are more ractive/responsive energy consumers
+
+```{r}
+hhold_stats %>% 
+  mutate(delta = iqr / max_value) %>% 
+  ggplot() +
+  geom_point(aes(x = min_value, y = delta))
+```
+
+Plotting v min_value is less informative, many households have low min_value. No real pattern in delta for households with higher min_value - maybe a positive correlation though?
+
+Idea:
+* split energy data for weekend v weekday before analysing more
+
+## Energy use weekend v weekday
+
+_Aug 23_
+
+We know season has an effect, see above time series
+
+In looking at the seasonal decomposition, we can see weekdays are lower usage than weekends
+
+Split summer v winter, and then split weekday v weekend --> viz & stats
+
+### Seasonality 
+
+_Aug 23_
+
+Look at seasonality again
+
+First need to convert data to tsibble:
+
+```{r}
+library(tsibble)
+library(slider)
+```
+
+```{r}
+# convert data to tsibble
+daily_energy_clean_ts <- as_tsibble(daily_energy_clean, key = lc_lid, index = date)
+```
+
+```{r}
+index_var(daily_energy_ts)
+```
+
+```{r}
+key_vars(daily_energy_ts)
+```
+
+To make rolling average for whole dataset, first find median of all values on a each date (because values are not normally distributed on a single date in December, see above, skewed), then do mean across a 14-day window (set as 7 before, 6 after, only show for complete range).
+
+```{r}
+# make df with median for each day
+median_14d_rolling_energy_clean_ts <- daily_energy_clean_ts %>% 
+  index_by(date) %>% 
+  summarise(median_kwh = median(kwh)) %>%
+  # add moving_avg using the mean
+  mutate(kwh_moving_avg = slide_dbl(
+    .x = median_kwh,
+    .f = ~ mean(.),
+    .before = 7,
+    .after = 6, # 14-day rolling average
+    .complete = TRUE
+  ))
+```
+
+```{r}
+median_14d_rolling_energy_clean_ts %>% 
+  ggplot() + 
+  geom_line(aes(x = date, y = median_kwh), colour = "grey") + 
+  geom_line(aes(x = date, y = kwh_moving_avg), colour = "red") +
+  theme_minimal()
+```
+
+Seasons still look like winter high, summer low. 
+Also looks like energy usage reducing year by year
+
+```{r}
+library(feasts)
+```
+
+Use the median values
+
+```{r}
+median_14d_rolling_energy_clean_ts %>% 
+  autoplot(median_kwh) +
+  xlab("Date") + ylab("Median daily energy consumption (kWh)")
+```
+
+
+```{r}
+# look at seasonal pattern
+median_14d_rolling_energy_clean_ts %>% 
+  gg_season(median_kwh)
+```
+
+Seasonal pattern is consistent year-on-year. Maybe 2014 looks like slightly lower usage? Also note some higher variability in winter 2011 data.
+
+Need to remove last date because values are off? And first date too? Have removed in cleaning step now.
+
+##### trend: weekdays
+
+_Aug 23_
+
+Look at subseries:
+
+Can see trend for every weekday - does look like Sat & Sun are higher.
+```{r}
+median_14d_rolling_energy_clean_ts %>% 
+  gg_subseries(y = median_kwh, period = 7)
+```
+
+Yes, weekends blue lines still look higher than for weekdays
+
+#### wday v season
+
+_Aug 23_
+
+Split into winter and summer data only and repeat to see if there is seasonal interaction here
+
+```{r}
+median_14d_rolling_energy_clean_ts
+```
+
+```{r}
+seasons_energy_clean_ts <- daily_energy_clean_ts %>% 
+  mutate(weekday = wday(date, label = TRUE), .after = date) %>% 
+  mutate(is_weekend = if_else(weekday %in% c("Sat","Sun"), T, F), .after = weekday) %>%
+  # note don't use zoo function on tsibble, use yearmonth()
+  mutate(yearmonth = yearmonth(date), .after = date) %>% 
+  mutate(month = month(date, label = FALSE), .after = date) %>% 
+  mutate(quarter = quarter(date, type = "date_first", fiscal_start = 12), .after = date) %>% 
+  mutate(yearseason = case_when(
+    #quarter == "2011-09-01" ~ "Autumn 2011",
+    quarter == "2011-12-01" ~ "Winter 2011",
+    quarter == "2012-03-01" ~ "Spring 2012",
+    quarter == "2012-06-01" ~ "Summer 2012",
+    quarter == "2012-09-01" ~ "Autumn 2012",
+    quarter == "2012-12-01" ~ "Winter 2012",
+    quarter == "2013-03-01" ~ "Spring 2013",
+    quarter == "2013-06-01" ~ "Summer 2013",
+    quarter == "2013-09-01" ~ "Autumn 2013",
+    quarter == "2013-12-01" ~ "Winter 2013",
+    .default = NA_character_
+  ), .after = quarter) %>% 
+  mutate(yearseason = factor(yearseason, levels = c(#"Autumn 2011",
+    "Winter 2011", "Spring 2012", "Summer 2012",
+    "Autumn 2012", "Winter 2012", "Spring 2013", 
+    "Summer 2013", "Autumn 2013", "Winter 2013")))
+```
+
+```{r}
+# make a winter subset (Winter 2011, 2012, 2013 - the year is when December was so Winter 2013 = Dec 2013, Jan + Feb 2014)
+winter_energy_ts <- seasons_energy_clean_ts %>% 
+  filter(str_detect(yearseason, "Winter*"))
+```
+
+```{r}
+# make a summer subset (Summer 2012, 2013)
+summer_energy_ts <- seasons_energy_clean_ts %>% 
+  filter(str_detect(yearseason, "Summer*"))
+```
+#### winter rolling avg
+
+```{r}
+# add medians & rolling avg for winter only
+winter_rolling_ts <- winter_energy_ts %>% 
+  index_by(date) %>% 
+  summarise(median_kwh = median(kwh)) %>%
+  # add moving_avg using the mean
+  mutate(kwh_moving_avg = slide_dbl(
+    .x = median_kwh,
+    .f = ~ mean(.),
+    .before = 7,
+    .after = 6, # 14-day rolling average
+    .complete = TRUE
+  )) %>% 
+  fill_gaps()
+```
+
+```{r}
+winter_rolling_ts %>% 
+  ggplot() + 
+  geom_line(aes(x = date, y = median_kwh), colour = "grey") + 
+  geom_line(aes(x = date, y = kwh_moving_avg), colour = "red") +
+  theme_minimal()
+```
+```{r}
+winter_rolling_ts %>% 
+  fill_gaps() %>% 
+  gg_subseries(y = median_kwh, period = 7)
+```
+
+```{r}
+winter_rolling_wday_ts <- winter_rolling_ts %>% 
+  mutate(weekday = wday(date, label = TRUE), .after = date) %>% 
+  mutate(is_weekend = if_else(weekday %in% c("Sat","Sun"), T, F), .after = weekday)
+
+winter_rolling_wday_ts
+```
+
+```{r}
+winter_rolling_wday_ts %>% 
+  ggplot() +
+  geom_boxplot(aes(x = is_weekend, y = median_kwh))
+```
+
+Warning says: Removed 550 rows containing non-finite values
+
+```{r}
+winter_rolling_wday_ts %>% 
+  filter(is_weekend) %>% 
+  ggplot() +
+  geom_histogram(aes(x = median_kwh), bins = 50)
+```
+_Warning: Removed 157 rows containing non-finite values_
+
+Looks approximately normal (some missing values)
+
+```{r}
+winter_rolling_wday_ts %>% 
+  filter(!is_weekend) %>% 
+  ggplot() +
+  geom_histogram(aes(x = median_kwh), bins = 50)
+```
+_Warning: Removed 393 rows containing non-finite values_
+
+Not normal, has 1 row with very low median
+
+```{r}
+winter_rolling_wday_ts %>% 
+  arrange(median_kwh)
+```
+
+The low value is the last date of the trial - looks odd in other graphs, so remove it from the dataset. <-- old, dealth with by removing 2014-02-28 in cleaning step
+
+##### DEAL WITH WARNINGS
+
+_todo: DEAL WITH WARNINGS ABOVE_
+Note they sum to 550! 
+
 ## Daily weather data
 
 Dataset 2, from https://www.kaggle.com/datasets/emmanuelfwerr/london-weather-data.
 
+### prep weather data
+
+_Aug 23_
+
+```{r}
+daily_weather <- read_csv("../3_raw_data/london_weather.csv")
+```
+```{r}
+skimr::skim(daily_weather)
+```
+date is not date value
+dates cover 1979 to 2020 december, filter to range of energy data
+
+```{r}
+start_date <- min(daily_energy$date)
+start_date
+
+end_date <- max(daily_energy$date)
+end_date
+```
 
 
-Ideas:
+```{r}
+daily_weather_trim <- daily_weather %>% 
+  mutate(date = ymd(date)) %>% 
+  filter(date >= start_date & date <= end_date)
 
-* types of household - look to see if there are any groups by patterns of consumption (not just overall high/low but variable v fixed over time) - try clustering?
+skimr::skim(daily_weather_trim)
+```
+
+### join energy + weather data
+
+_Aug 23_
+
+```{r}
+# join energy data with weather data
+daily_energy_weather <- left_join(x = daily_energy, y = daily_weather_trim, by = join_by(date))
+daily_energy_weather
+```
+
+
+### model hholds with weather and time
+
+_Aug 23_
+
+* idea: identify types of household - look to see if there are any groups by patterns of consumption (not just overall high/low but variable v fixed over time) - try clustering?
+
+do households respond differently to weather? can we identify households that might need to improve their heating (ie high energy usage on cold days) - both in terms of energy efficiency and home insulation
+
+first, check if mean_temp and kwh correlate (for high/average/low consumer medians) --> load weather data
+
+
+Remaining ideas:
+
 * types of weather days - see if there are clusters of temperature, precipitation, cloud cover, sunshine etc --> categories "mild cloudy rainy day" etc
-* convert datetime to season, month, day, weekday
 
 
