@@ -48,10 +48,10 @@ pc_zero_threshold <- 10 # set as 10% to include households with 0 energy days wh
 obs_threshold <- 180 # set as 180 (days) to remove households with less than ~6 months' worth of data
 
 ### output filepath for household energy data
-hhold_energy_output_filepath <- "4_cleaned_data/daily_energy_clean.csv"
+hhold_energy_output_filepath <- "../4_cleaned_data/daily_energy_clean.csv"
 
 # Load and trim dates of raw data ----
-daily_energy_trim <- read_csv("3_raw_data/london_energy.csv") %>% 
+daily_energy_trim <- read_csv("../3_raw_data/london_energy.csv") %>% 
   janitor::clean_names() %>% 
   filter(date >= start_date & date <= end_date)
 
@@ -103,6 +103,9 @@ pc_hholds_removed <- 100 * num_hholds_removed / num_hholds_og
 
 # Save cleaned data to new csv file
 write_csv(daily_energy_clean, hhold_energy_output_filepath)
+
+# also save trimmed data, before removing households, for further exploration
+write_csv(daily_energy_trim, "../4_cleaned_data/daily_energy_all_hholds.csv")
 
 # Print messages about cleaning steps
 
