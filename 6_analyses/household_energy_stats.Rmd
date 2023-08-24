@@ -1,0 +1,108 @@
+---
+title: "Household stats"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+household_energy <- read_csv("../4_cleaned_data/daily_energy_clean.csv")
+```
+
+```{r}
+all_kwh_stats <- household_energy %>% 
+  select(kwh) %>% 
+  skimr::skim()
+
+all_kwh_stats %>% 
+  colnames()
+
+kwh_q1 <- all_kwh_stats %>% 
+  select(numeric.p25) %>% 
+  pull()
+
+kwh_q3 <- all_kwh_stats %>% 
+  select(numeric.p75) %>% 
+  pull()
+
+kwh_q1
+kwh_q3
+```
+
+```{r}
+total_days <- as.numeric(max(household_energy$date) - min(household_energy$date) + 1)
+
+hhold_stats <- household_energy %>% 
+  mutate(zero_kwh = if_else(kwh == 0, T, F)) %>% 
+  group_by(lc_lid) %>%
+  summarise(num_values = n(),
+            num_zeros = sum(zero_kwh),
+            min_value = min(kwh),
+            max_value = max(kwh),
+            range = (max(kwh) - min(kwh)),
+            median_kwh = median(kwh),
+            iqr = IQR(kwh),
+            mean_kwh = mean(kwh),
+            sd = sd(kwh)
+  ) %>% 
+  mutate(pc_missing_days = (100 * (total_days - num_values) / total_days), .after = lc_lid) %>% 
+  mutate(pc_zero_values = (100 * num_zeros / num_values), .after = pc_missing_days) %>% 
+  ungroup()  
+
+hhold_stats
+```
+
+```{r}
+hh_kwh_stats <- hhold_stats %>% 
+  select(median_kwh) %>% 
+  skimr::skim()
+
+hh_kwh_stats %>% 
+  colnames()
+
+hh_kwh_q1 <- hh_kwh_stats %>% 
+  select(numeric.p25) %>% 
+  pull()
+
+hh_kwh_q3 <- hh_kwh_stats %>% 
+  select(numeric.p75) %>% 
+  pull()
+
+hh_kwh_q1
+hh_kwh_q3
+hh_kwh_stats
+```
+
+```{r}
+quantile(hhold_stats$median_kwh, probs = seq(.05, .95, by = .05))
+```
+
+```{r}
+decile_90_median <- 17.62010
+decile_95_median <- 21.975800
+
+hhold_stats <- hhold_stats %>% 
+  mutate(decile_95 = if_else(median_kwh >= decile_95_median, T, F))
+```
+
+
+```{r}
+hhold_stats %>% 
+  ggplot() +
+  geom_point(aes(x = median_kwh, y = iqr, colour = decile_95), size = 1) +
+  theme_classic() +
+  scale_colour_manual(values = c("black", "#65a346"), guide = NULL) +
+  labs(x = "\nMedian daily energy consumption (kWh)",
+       y = "Variability (interquartile range)\n",
+       title = "Energy usage patterns by household",
+       subtitle = "5,474 households in London, 2011-2014\n") +
+  theme(axis.title = element_text(size = 14),
+        axis.text = element_text(size = 18),
+        plot.title = element_text(size = 24),
+        plot.subtitle = element_text(size = 14))
+
+ggsave("scatter_household_median_v_iqr.png", scale = 1, dpi = 300)
+```
+
