@@ -85,21 +85,30 @@ _Note also point above about missing information on customer group (dynamic v fi
 
 #### Ethical issues in data sourcing and extraction
 
-Do you have any ethical concerns regarding the sourcing and extraction of your data? 
+_Do you have any ethical concerns regarding the sourcing and extraction of your data? _
+
+* Secondary data: data were sourced from Kaggle, for which the author had processed the data from the primary sources. The processing scripts and details were not provided, therefore have to rely on the author doing this correctly. Some assumptions have been made as to what the weather data variables mean, given the original source had multiple options for each of the variables inferred from the column names.
+* Primary data source: for the household energy consumption data, the data were collected as part of a research project. The data used does not contain any information about the household itself, other than an identifier value, so we do not know location or any personal information about the inhabitants. 
 
 #### Ethical implications of business requirements
 
-Are there any ethical implications of the business requirements?
+_Are there any ethical implications of the business requirements?_
+
+* Categorising households according the their energy consumption patterns may reveal personal information about how a house is used, including whether it is vacant (many days with low/no energy usage), or could be used to infer properties of the household (size, insulation, whether there are energy intensive devices being run). So the business requirements are not free from ethical implications, and we should consider how the resulting data or model may be used by the business or any others who see any public outputs. For example, burglars could target households with very low usage on predicted zero-energy days, with the assumption they may be unoccupied residences. However, I consider this unlikely, and overall I think the probability of any severe implications from misuse is low.
 
 ## Analysis
 
 #### Stages in the data analysis process
 
-What were the main stages in your data analysis process?
+_What were the main stages in your data analysis process?_
+
+1. Exploration of data, what's possible
+2. Cleaning, preparing, joining data - informed by the above
+3. ...
 
 #### Tools for data analysis
 
-What were the main tools you used for your analysis?
+_What were the main tools you used for your analysis?_
 
 #### Descriptive, diagnostic, predictive and prescriptive analysis
 
