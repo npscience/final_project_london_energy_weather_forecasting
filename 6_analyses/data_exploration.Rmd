@@ -9,8 +9,6 @@ This notebook contains code and output from exploring the data to inform cleanin
 library(tidyverse)
 library(ggplot2)
 library(lubridate)
-library(GGally) # for ggpairs to explore correlations
-library(psych) # for pairplots to explore correlations
 ```
 
 # Load and inspect data
@@ -1284,4 +1282,4 @@ Remaining ideas:
 
 * types of weather days - see if there are clusters of temperature, precipitation, cloud cover, sunshine etc --> categories "mild cloudy rainy day" etc
 
-
+_written scripts to prepare data (including joined data), moving to new notebook now to explore weather data and household energy/weather features_

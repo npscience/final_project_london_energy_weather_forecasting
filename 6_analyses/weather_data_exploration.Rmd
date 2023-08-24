@@ -1,0 +1,125 @@
+---
+title: "Weather data exploration"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(lubridate)
+library(GGally) # for ggpairs to explore correlations
+library(psych) # for pairplots to explore correlations
+```
+
+```{r}
+daily_energy_weather <- read_csv("../4_cleaned_data/daily_energy_weather_clean.csv")
+daily_energy_weather_all <- read_csv("../4_cleaned_data/daily_energy_weather_all.csv")
+```
+
+### Joined data
+
+```{r}
+# cleaned households
+view(skimr::skim(daily_energy_weather))
+```
+
+* Temperatures (min, mean, max) and pressure values look normally distributed (at a glance)
+* Cloud cover is left skewed (i.e. lots at higher values, long beginning tail)
+* Rest are right skewed (i.e. lots a lower values, long ending tail)
+
+Scales are different: 1s, 10s, and pressure is in 100,0000s
+
+853 rows missing cloud_cover values
+
+min values of 0: kWh, cloud cover, sunshine, precipitation, snow_depth -- 0 would be a real value for all of these, see units below.
+
+```{r}
+# all households
+view(skimr::skim(daily_energy_weather_all))
+```
+
+Very similar overview stats here, just slightly shifted kWh distribution (p25 changed)
+
+## About the weather observations
+
+What are the units? See kaggle: https://www.kaggle.com/datasets/emmanuelfwerr/london-weather-data
+
+* date - recorded date of measurement - (int)
+* cloud_cover - cloud cover measurement in oktas - (float)
+* sunshine - sunshine measurement in hours (hrs) - (float)
+* global_radiation - irradiance measurement in Watt per square meter (W/m2) - (float)
+* max_temp - maximum temperature recorded in degrees Celsius (°C) - (float)
+* mean_temp - mean temperature in degrees Celsius (°C) - (float)
+* min_temp - minimum temperature recorded in degrees Celsius (°C) - (float)
+* precipitation - precipitation measurement in millimeters (mm) - (float)
+* pressure - pressure measurement in Pascals (Pa) - (float)
+* snow_depth - snow depth measurement in centimeters (cm) - (float)
+
+### Cloud cover
+
+Cloud cover measured in oktas: "Cloud cover is measured on an eight point scale, 0 Oktas being clear sky , one Octa being 1/8 of the sky covered in cloud, and so on up to 8 Oktas - completely overcast." -- https://www.sserc.org.uk/wp-content/uploads/2012/04/Resource-2_2-Measuring-Cloud-Cover.pdf
+
+### Sunshine hours
+
+May be alias with temperature and radiation; higher sunshine hours meaning higher temps and maybe also higher solar energy generation for any households with solar panels (note we do not have this information so cannot exclude this)
+
+### Global radiation
+
+Global radiation: "Solar irradiance is the power per unit area (surface power density) received from the Sun in the form of electromagnetic radiation in the wavelength range of the measuring instrument." -- https://en.wikipedia.org/wiki/Solar_irradiance#:~:text=The%20SI%20unit%20of%20irradiance,or%2041%2C840%20J%2Fm2.
+
+May be related to temperature and sunshine hours, also may indicate how much energy generated from household solar panels, if any, and thus not drawn from the grid (and therefore assume not included in smart energy measurement of consumption).
+
+### Temperature
+
+max, mean and min for each day
+
+Note 0 here is not ture 0, it represented 0 degrees Celsius (freezing point of water)
+
+### Precipitation
+
+measurement in millimeters (mm) - so here 0 means no precipitation
+
+Maybe weather days mean cooler days mean more heating - so check for aliases with energy usage.
+
+Maybe wetter days also mean more tumble dryer usage, or shower/hairdryer if got wet outside.
+
+Could convert to yes/no if interesting to do so.
+
+### Pressure
+
+Air pressure measurement in Pascals (Pa).
+
+Note: standard atmospheric pressure on Earth is 101,325 Pa (https://en.wikipedia.org/wiki/Pascal_(unit)) -- so could reframe to higher/lower than 1 atm_press or recode units to number of atmospheric pressure units.
+
+Note raw pascals is currently v different scale (100,000s) to other units in this df.
+
+### Snow depth
+
+measurement in centimeters (cm) - so 0 is true 0 here (meaning no snow).
+
+May be useful to convert to snow yes/no, since it is a rare occurrence, and depth may not make much difference beyond the temp measurement (any snow means it's a cold day).
+
+
+## Assertions about data
+
+Improve cleaning/preparations steps using assertions - to stop if data is not as expected
+
+* numeric data:
+  * cloud cover >=0 & <= 8 (okta scale is set to 0-8)
+  * sunshine >=0 & <= 24 (can only be 0 - 24 hours)
+  * *_temp >= -10 & <= 60 (i.e. use reasonable cutoffs for temperature in UK)
+  * max_temp >= min_temp & max_temp >= mean_temp & mean_temp >= min_temp
+* date format:
+  * date: >= start_date & <= end_date (as specified)
+* 
+
+_WIP_
+
+## Look for correlations
+
+Use `daily_energy_weather` for cleaned households and `daily_energy_weather_all` to include all households (e.g. with lots of 0s, in case of solar panels)
+
+
+
+
+

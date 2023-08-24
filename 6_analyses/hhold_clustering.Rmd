@@ -16,10 +16,10 @@ What shape of data do I need?
 Use cleaned data (run cleaning script(s) first)
 
 ```{r}
-daily_energy <- read_csv("../4_cleaned_data/daily_energy_clean.csv")
+daily_energy_weather <- read_csv("../4_cleaned_data/daily_energy_weather_clean.csv")
 ```
 
 ```{r}
-daily_energy
+daily_energy_weather
 ```
 
