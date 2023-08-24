@@ -1,0 +1,212 @@
+---
+title: "Ts forecasting model for household energy consumption"
+output: html_notebook
+---
+
+# Setup
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(lubridate)
+library(tsibble) # to convert to tsibble (ts data)
+library(slider) # for rolling average
+library(feasts) # for ts analyses
+library(fable) # for forecasting
+library(urca) # support function for ARIMA model?
+#library(GGally) # for ggpairs to explore correlations
+#library(psych) # for pairplots to explore correlations
+```
+
+```{r}
+# household energy consumption by date (from Kaggle)
+daily_energy <- read_csv("../3_raw_data/london_energy.csv") %>% 
+  janitor::clean_names()
+```
+```{r}
+# trim dates - because of lack of data at start & unusual end value
+  # start in Winter 2011 (91 households by that point)
+  # and remove last date, very low median value (unusual)
+daily_energy_trim <- daily_energy %>% 
+  filter(date >= "2011-12-01" & date < "2014-02-28")
+
+daily_energy_trim
+```
+```{r}
+total_days <- as.numeric(max(daily_energy_trim$date) - min(daily_energy_trim$date) + 1)
+total_days
+```
+
+```{r}
+daily_energy_trim %>% 
+  summarise(num_obs = n(), .by = lc_lid)
+```
+
+5,566 households in this data, varying number of observations each over total time frame of 820 days
+
+```{r}
+# generate household stats
+hhold_stats <- daily_energy_trim %>% 
+  mutate(zero_kwh = if_else(kwh == 0, T, F)) %>% 
+  group_by(lc_lid) %>%
+  summarise(num_values = n(),
+            num_zeros = sum(zero_kwh),
+            min_value = min(kwh),
+            max_value = max(kwh),
+            range = (max(kwh) - min(kwh)),
+            median_kwh = median(kwh),
+            iqr = IQR(kwh),
+            mean_kwh = mean(kwh),
+            sd = sd(kwh)
+            ) %>% 
+  mutate(pc_missing_days = (100 * (total_days - num_values) / total_days), .after = lc_lid) %>% 
+  mutate(pc_zero_values = (100 * num_zeros / num_values), .after = pc_missing_days) %>% 
+  ungroup()
+
+hhold_stats
+```
+
+```{r}
+daily_energy_clean %>%
+  filter(lc_lid == "MAC000002") %>% 
+  ggplot() +
+  geom_line(aes(x = date, y = kwh)) +
+  ggtitle("Daily energy consumption for a single household (MAC000002)") +
+  ylab("Energy consumed (kWh)") + xlab("Date")
+```
+
+``` {r}
+# list hholds with more than 10% of data as 0 kWh
+hholds_10pc_zero <- hhold_stats %>% 
+  filter(pc_zero_values > 10) %>% 
+  pull(lc_lid) # 73 hholds
+
+# list hholds with fewer than 180 observations (6 months) in dataset
+hholds_180obs <- hhold_stats %>% 
+  filter(!lc_lid %in% hholds_10pc_zero) %>% 
+  filter(num_values < 180) %>% 
+  pull(lc_lid) # 19 hholds
+
+# create cleaned df (remove hholds with limited data or lots of zeros, trim dates)
+daily_energy_clean <- daily_energy_trim %>% 
+  filter(!lc_lid %in% hholds_10pc_zero) %>% 
+  filter(!lc_lid %in% hholds_180obs)
+
+num_hholds_og <- length(unique(daily_energy$lc_lid))
+num_hholds_clean <- length(unique(daily_energy_clean$lc_lid))
+
+num_hholds_og
+num_hholds_clean
+num_hholds_og - num_hholds_clean
+100* (num_hholds_og - num_hholds_clean) / num_hholds_og
+```
+
+```{r}
+skimr::skim(daily_energy_clean)
+```
+
+After cleaning: 92 households (1.6%) removed from data, leaving 5,474 households in "cleaned" data, across 820 days from 2011-12-01 to 2014-02-27, with varying numbers of households per day (note on-ramp at the beginning of the time period).
+
+```{r}
+# generate tsibble from cleaned data
+daily_energy_ts <- as_tsibble(daily_energy_clean, key = lc_lid, index = date)
+```
+
+
+# Prelim
+
+Brief: Using all households (n = 5,474; after cleaning), model expected average household consumption in future years.
+
+## How to do test/train split?
+
+Depends on amount of data!
+
+In the first 6 months or so, not every household signed up:
+
+```{r}
+num_hholds_by_date <- daily_energy_clean %>% 
+  group_by(date) %>% 
+  summarise(num_hholds = n())
+
+num_hholds_by_date %>% 
+  ggplot() +
+  geom_line(aes(x = date, y = num_hholds))
+```
+
+So there might not be enough data in early timeframe, or long enough time period, to do a split.
+
+Initial: try training on ~1.5 years data, test on the most recent winter months, e.g.
+
+* Training: 2011-12-01 to 2013-10-31
+* Test: 2013-11-01 to 2014-02-27
+
+```{r}
+start_date <- min(daily_energy_clean$date)
+end_date <- max(daily_energy_clean$date)
+
+train_length <- as.numeric(as_date("2013-10-31") - start_date + 1) # +1 inclusive dates
+test_length <- as.numeric(end_date - as_date("2013-11-01") + 1)
+pc_test <- 100 * test_length / (train_length + test_length)
+
+train_length
+test_length
+# should sum to 820!
+pc_test
+```
+
+So this would mean forecasting for winter 2013, ~15% of the timeframe of the actual dataset, covering one winter season.
+
+What would be the % data?
+
+```{r}
+test_data_len <- daily_energy_clean %>% 
+  filter(date >= "2013-11-01") %>%  # the test split
+  nrow()
+test_data_len
+
+pc_test_data <- 100* test_data_len / nrow(daily_energy_clean)
+pc_test_data
+```
+
+601,038 observations in test set, 17.3% of overall observations across whole dataset.
+
+So 2013-11-01 (as first date in test data) seems like an appropriate cut-off date for test/train split.
+
+```{r}
+# split the data
+
+# ~85% of the timeframe, just under 2 years of data
+allhholds_forecast_train <- daily_energy_ts %>% 
+  filter_index(. ~ "2013-10-31")
+
+# most recent 4 months
+allhholds_forecast_test <- daily_energy_ts %>% 
+  filter_index("2013-11-01" ~ .)
+```
+
+
+### Other options to explore if this doesn't work
+
+_Q: can I test/train split the most recent year to have some training data but test on 20% households?_ If so, how to pick the 20%? Could do random selection, but would I be missing a key stratification (e.g. high/medium/low consumers - could calculate from each household's median: high >Q3 overall, low <Q1 overall, medium in Q1-Q3 overall range)
+
+## How/what to model on?
+
+From exploration:
+
+* For a traditional forecast (1 value per day) - use median as average per day and per household due to not normal distribution?
+* Or use all data available and do probabilistic forecasting -- see work by Jethro Browell
+
+* Visually, see seasonal pattern (high winter, low summer), weekday pattern (higher weekends that weekdays), and looks like energy consumption is reducing over time. -- use seasonal models:
+  * snaive
+  * SARIMA
+  * seasonal decomposition + any model - tbc
+
+
+```{r}
+allhholds_forecast_train
+```
+
+Use ```autoplot()``` to plot ts graph - but reduce rows first, otherwise R gets stuck!
+
+__PAUSING__ to pursue a different business question (characterising households by patterns of energy consumption)
+

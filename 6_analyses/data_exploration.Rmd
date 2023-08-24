@@ -196,7 +196,10 @@ Can see trend for every weekday - does look like Sat & Sun are higher.
 median_all_daily_energy_ts %>% 
   gg_subseries(y = median_kwh, period = 7)
 ```
-##### UPDATE FROM HERE
+
+##### restrict to winter only?
+
+_old code, didn't work, not sure the Q is right so pause this for now_
 
 ```{r}
 # look only at winter months
@@ -1133,6 +1136,7 @@ winter_energy_ts <- seasons_energy_clean_ts %>%
 summer_energy_ts <- seasons_energy_clean_ts %>% 
   filter(str_detect(yearseason, "Summer*"))
 ```
+
 #### winter rolling avg
 
 ```{r}
@@ -1207,10 +1211,18 @@ winter_rolling_wday_ts %>%
 
 The low value is the last date of the trial - looks odd in other graphs, so remove it from the dataset. <-- old, dealth with by removing 2014-02-28 in cleaning step
 
-##### DEAL WITH WARNINGS
+##### TODO DEAL WITH WARNINGS
 
 _todo: DEAL WITH WARNINGS ABOVE_
 Note they sum to 550! 
+
+##### TODO analyse weekend v wday in summer too
+
+_TODO_
+
+##### TODO forecasting model
+
+_TODO_
 
 ## Daily weather data
 
@@ -1230,10 +1242,10 @@ date is not date value
 dates cover 1979 to 2020 december, filter to range of energy data
 
 ```{r}
-start_date <- min(daily_energy$date)
+start_date <- min(daily_energy_clean$date)
 start_date
 
-end_date <- max(daily_energy$date)
+end_date <- max(daily_energy_clean$date)
 end_date
 ```
 
@@ -1252,7 +1264,7 @@ _Aug 23_
 
 ```{r}
 # join energy data with weather data
-daily_energy_weather <- left_join(x = daily_energy, y = daily_weather_trim, by = join_by(date))
+daily_energy_weather <- left_join(x = daily_energy_clean, y = daily_weather_trim, by = join_by(date))
 daily_energy_weather
 ```
 
