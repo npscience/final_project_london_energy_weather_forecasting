@@ -41,10 +41,28 @@ daily_weather_trim <- read_csv("3_raw_data/london_weather.csv") %>%
 start_date_trim <- min(daily_weather_trim$date)
 end_date_trim <- max(daily_weather_trim$date)
 
-# Additional cleaning steps (if any) ----
+# Additional cleaning steps ----
+
+daily_weather_clean <- daily_weather_trim %>% 
+  # add quality col to note the days where (1) mean_temp > max_temp 
+  # and (2) min_temp > max_temp
+  mutate(temp_qual = case_when(
+    mean_temp > max_temp & min_temp > max_temp ~ "warning: max temp less than min temp and mean temp",
+    mean_temp > max_temp ~ "warning: max temp less than mean temp",
+    min_temp > max_temp ~ "warning: max temp less than min temp",
+    .default = NA_character_
+  )) %>% 
+  # add var for snow yes/no
+  mutate(snow_tf = if_else(snow_depth > 0, T, F), .before = snow_depth) %>% 
+  # add var for precipitation yes/no
+  mutate(precipitation_tf = if_else(precipitation > 0, T, F), .before = precipitation)
+  
+## Other potential cleaning steps (for later if doing)
+# convert pressure to atm pressure units (i.e. / 101,325 Pa) - _no need, not using in this iteration_
+# if not using season/month, could add temp_levels factor (low, medium, high - work out how) - _not doing in this iteration_
 
 # Save cleaned data to new csv file ----
-write_csv(daily_weather_trim, weather_output_filepath)
+write_csv(daily_weather_clean, weather_output_filepath)
 
 # Print messages about cleaning steps ----
 
@@ -61,9 +79,6 @@ if (start_date_trim == start_date & end_date_trim == end_date) {
   print(str_c("Data loaded and dates trimmed. Warning: end date of trimmed data (",end_date_trim,") does not match input settings (",end_date,"). Please check data."))
 }
 
-## Print outcome of cleaning steps (if any)
-##print(str_c("Cleaning step complete: ",num_hholds_removed," (",pc_hholds_removed,"%) households removed, ",num_hholds_clean," remaining households in cleaned data."))
-
-dim_weather_clean <- dim(daily_weather_trim)
+dim_weather_clean <- dim(daily_weather_clean)
 
 print(str_c("Weather data preparation complete: cleaned data contains ",dim_weather_clean[1]," observations and ",dim_weather_clean[2]," attributes, and has been written to ",weather_output_filepath,"."))

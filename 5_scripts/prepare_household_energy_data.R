@@ -48,17 +48,50 @@ pc_zero_threshold <- 10 # set as 10% to include households with 0 energy days wh
 obs_threshold <- 180 # set as 180 (days) to remove households with less than ~6 months' worth of data
 
 ### output filepath for household energy data
-hhold_energy_output_filepath <- "../4_cleaned_data/daily_energy_clean.csv"
+hhold_energy_output_filepath <- "4_cleaned_data/daily_energy_clean.csv"
+hhold_all_energy_output_filepath <- "4_cleaned_data/daily_energy_all_hholds.csv"
 
-# Load and trim dates of raw data ----
-daily_energy_trim <- read_csv("../3_raw_data/london_energy.csv") %>% 
+# Load and describe dates of raw data ----
+daily_energy <- read_csv("3_raw_data/london_energy.csv") %>% 
   janitor::clean_names() %>% 
+  # add vars for month, season, weekday type
+  mutate(month = month(date, label = TRUE), .after = date) %>% 
+  mutate(wday = wday(date, label = TRUE), .after = month) %>% 
+  mutate(weekend = if_else(wday %in% c("Sat", "Sun"), T, F), .after = wday) %>% 
+  mutate(quarter = quarter(date, type = "date_first", fiscal_start = 12), .after = month) %>%
+  mutate(yearseason = case_when(
+    quarter == "2011-09-01" ~ "Autumn 2011",
+    quarter == "2011-12-01" ~ "Winter 2011",
+    quarter == "2012-03-01" ~ "Spring 2012",
+    quarter == "2012-06-01" ~ "Summer 2012",
+    quarter == "2012-09-01" ~ "Autumn 2012",
+    quarter == "2012-12-01" ~ "Winter 2012",
+    quarter == "2013-03-01" ~ "Spring 2013",
+    quarter == "2013-06-01" ~ "Summer 2013",
+    quarter == "2013-09-01" ~ "Autumn 2013",
+    quarter == "2013-12-01" ~ "Winter 2013",
+    .default = NA_character_
+  ), .after = quarter) %>% 
+  mutate(yearseason = factor(yearseason, levels = c(
+    "Autumn 2011", "Winter 2011", "Spring 2012", "Summer 2012",
+    "Autumn 2012", "Winter 2012", "Spring 2013", "Summer 2013",
+    "Autumn 2013", "Winter 2013"
+  ))) %>% 
+  mutate(season = case_when(
+    str_detect(yearseason, "Winter") ~ "Winter",
+    str_detect(yearseason, "Summer") ~ "Summer",
+    str_detect(yearseason, "Spring|Autumn") ~ "Spring/Autumn",
+    .default = NA_character_
+  ), .after = month)
+
+# Trim dates according to input settings ----  
+daily_energy_trim <- daily_energy %>% 
   filter(date >= start_date & date <= end_date)
 
 start_date_trim <- min(daily_energy_trim$date)
 end_date_trim <- max(daily_energy_trim$date)
 
-# Clean households ---
+# Clean households according to input settings ----
 total_days <- as.numeric(max(daily_energy_trim$date) - min(daily_energy_trim$date) + 1)
 
 ## generate household data quality stats
@@ -105,7 +138,7 @@ pc_hholds_removed <- 100 * num_hholds_removed / num_hholds_og
 write_csv(daily_energy_clean, hhold_energy_output_filepath)
 
 # also save trimmed data, before removing households, for further exploration
-write_csv(daily_energy_trim, "../4_cleaned_data/daily_energy_all_hholds.csv")
+write_csv(daily_energy_trim, hhold_all_energy_output_filepath)
 
 # Print messages about cleaning steps
 
@@ -127,4 +160,4 @@ print(str_c("Cleaning step complete: ",num_hholds_removed," (",pc_hholds_removed
 
 dim_energy_clean <- dim(daily_energy_clean)
 
-print(str_c("Household energy data preparation complete: cleaned data contains ",dim_energy_clean[1]," observations and ",dim_energy_clean[2]," attributes, and has been written to ",hhold_energy_output_filepath,"."))
+print(str_c("Household energy data preparation complete: cleaned data contains ",dim_energy_clean[1]," observations and ",dim_energy_clean[2]," attributes, and has been written to ",hhold_energy_output_filepath,". For data without removing any households, use ",hhold_all_energy_output_filepath,"."))

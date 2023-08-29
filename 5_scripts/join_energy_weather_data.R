@@ -4,13 +4,13 @@
 library(tidyverse)
 
 # input settings
-join_output_filepath <- "../4_cleaned_data/daily_energy_weather_clean.csv" # specify
-join_all_output_filepath <- "../4_cleaned_data/daily_energy_weather_all.csv" # specify
+join_output_filepath <- "4_cleaned_data/daily_energy_weather_clean.csv" # specify
+join_all_output_filepath <- "4_cleaned_data/daily_energy_weather_all.csv" # specify
 
 # read in cleaned data files
-daily_energy <- read_csv("../4_cleaned_data/daily_energy_clean.csv")
-daily_energy_all_hholds <- read_csv("../4_cleaned_data/daily_energy_all_hholds.csv") # includes all hholds, ## i.e. without removing those with missing data and lots of zero values removed (in case of solar panels)
-daily_weather <- read_csv("../4_cleaned_data/daily_weather_clean.csv")
+daily_energy <- read_csv("4_cleaned_data/daily_energy_clean.csv")
+daily_energy_all_hholds <- read_csv("4_cleaned_data/daily_energy_all_hholds.csv") # includes all hholds, ## i.e. without removing those with missing data and lots of zero values removed (in case of solar panels)
+daily_weather <- read_csv("4_cleaned_data/daily_weather_clean.csv")
 
 # join dataframes
 daily_energy_weather <- left_join(x = daily_energy, y = daily_weather, by = join_by(date))
