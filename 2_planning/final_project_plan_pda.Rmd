@@ -94,7 +94,7 @@ _Do you have any ethical concerns regarding the sourcing and extraction of your 
 
 _Are there any ethical implications of the business requirements?_
 
-* Categorising households according the their energy consumption patterns may reveal personal information about how a house is used, including whether it is vacant (many days with low/no energy usage), or could be used to infer properties of the household (size, insulation, whether there are energy intensive devices being run). So the business requirements are not free from ethical implications, and we should consider how the resulting data or model may be used by the business or any others who see any public outputs. For example, burglars could target households with very low usage on predicted zero-energy days, with the assumption they may be unoccupied residences. However, I consider this unlikely, and overall I think the probability of any severe implications from misuse is low.
+Categorising households according the their energy consumption patterns may reveal personal information about how a house is used, including whether it is vacant (many days with low/no energy usage), or could be used to infer properties of the household (size, insulation, whether there are energy intensive devices being run). So the business requirements are not free from ethical implications, and we should consider how the resulting data or model may be used by the business or any others who see any public outputs. For example, burglars could target households with very low usage on predicted zero-energy days, with the assumption they may be unoccupied residences. However, I consider this unlikely, and overall I think the probability of any severe implications from misuse is low.
 
 ## Analysis
 
