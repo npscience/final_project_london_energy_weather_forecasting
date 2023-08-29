@@ -499,25 +499,6 @@ With k = 3 --> there is clear separation of cluster 1 into high changers and clu
 
 With k = 4 --> clusters 3 and 4 are "low weekday-type changers" (i.e. clustered in bottom-left of the mass), clusters 1 and 2 cover most of the main mass of points, not necessarily "high changers"
 
-```{r}
-# for presentation
-clustering %>% 
-  unnest(cols = c(augmented)) %>% 
-  filter(k <= 3) %>% 
-  ggplot(aes(x = summer_wkend_pc_change, y = winter_wkend_pc_change)) +
-  geom_point(aes(colour = .cluster, fill = .cluster), size = 1, alpha = 0.2) +
-  labs(x = "% energy change on Summer weekends",
-       y = "% energy change on Winter weekends",
-       title = "Change in energy usage: weekend effect",
-       subtitle = "for 5,078 households in London, Summer/Winter 2013 (with k = 3)") +
-  scale_colour_manual(values = c("#15487a", "goldenrod1", "deeppink1")) +
-  scale_fill_manual(values = c("#15487a", "goldenrod1", "deeppink1")) +
-  theme_cc_final_project()
-
-ggsave("k3_weekend_effect_scatterplot.png", width = 15, units = "cm", dpi = 300)
-```
-
-
 #### winter mean ~ winter/summer change
 
 ```{r}
