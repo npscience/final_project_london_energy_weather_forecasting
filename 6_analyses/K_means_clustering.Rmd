@@ -27,12 +27,12 @@ For full exploration leading to the cleaning and feature engineering steps, refe
 ```{r}
 library(tidyverse)
 library(cluster)
-#library(factoextra) ## these are for hierarchical clustering
 #library(dendextend) ## these are for hierarchical clustering
 library(corrplot) # for correlation plot
 library(broom) # for k means optimisation stats
 library(ggsignif) # for silhouette method
 library(rstatix) # for silhouette method
+library(factoextra) # for silhouette method
 ```
 
 ```{r}
@@ -495,9 +495,28 @@ clustering %>%
 
 With k = 2 --> there is no real distinction along this plane
 
-With k = 3 --> there is clear separation of cluster 1 into low changers and cluster 2 into high changers.
+With k = 3 --> there is clear separation of cluster 1 into high changers and cluster 2 into low changers.
 
 With k = 4 --> clusters 3 and 4 are "low weekday-type changers" (i.e. clustered in bottom-left of the mass), clusters 1 and 2 cover most of the main mass of points, not necessarily "high changers"
+
+```{r}
+# for presentation
+clustering %>% 
+  unnest(cols = c(augmented)) %>% 
+  filter(k <= 3) %>% 
+  ggplot(aes(x = summer_wkend_pc_change, y = winter_wkend_pc_change)) +
+  geom_point(aes(colour = .cluster, fill = .cluster), size = 1, alpha = 0.2) +
+  labs(x = "% energy change on Summer weekends",
+       y = "% energy change on Winter weekends",
+       title = "Change in energy usage: weekend effect",
+       subtitle = "for 5,078 households in London, Summer/Winter 2013 (with k = 3)") +
+  scale_colour_manual(values = c("#15487a", "goldenrod1", "deeppink1")) +
+  scale_fill_manual(values = c("#15487a", "goldenrod1", "deeppink1")) +
+  theme_cc_final_project()
+
+ggsave("k3_weekend_effect_scatterplot.png", width = 15, units = "cm", dpi = 300)
+```
+
 
 #### winter mean ~ winter/summer change
 
@@ -639,6 +658,14 @@ Using k=3 for k-means clustering:
 * Cluster 3 is the smallest (n = 810 households) and characterised similarly to cluster 1 in weekend behaviour (not much change, not an increase compared to weekday) but they use **more** than average energy during the winter and increase usage from summer to winter.
 
 ```{r}
+# % households in each group
+100*3151/5078
+100*1117/5078
+100*810/5078
+```
+
+
+```{r}
 # add the cluster label onto the original dataframes
 
 # retrieve the labels
@@ -662,6 +689,12 @@ joined_clustered %>%
 ```
 
 Note the joined df only contains the 5,078 households that were clustered (inner_join).
+
+```{r}
+write_csv(summary_df_clustered, "../4_cleaned_data/households_summary_clustered.csv")
+write_csv(joined_clustered, "../4_cleaned_data/households_energy_weather_clustered.csv")
+```
+
 
 ## Visualisation and insights
 
@@ -837,3 +870,8 @@ joined_clustered %>%
   theme(legend.position = "bottom")
 ```
 
+From these visualizations, we can see that the clustering model picks out households that:
+
+(i) are higher consumers who vastly increase electricity usage in winter (cluster 3)
+(ii) increase electricity usage at the weekend (cluster 2)
+(iii) lower users with much lower variability in energy usage across seasons and weekday types (cluster 1)
