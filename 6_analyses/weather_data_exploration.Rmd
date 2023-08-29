@@ -3,6 +3,8 @@ title: "Weather data exploration"
 output: html_notebook
 ---
 
+# Setup and load data
+
 ```{r}
 library(tidyverse)
 library(ggplot2)
@@ -13,32 +15,12 @@ library(psych) # for pairplots to explore correlations
 
 ```{r}
 daily_energy_weather <- read_csv("../4_cleaned_data/daily_energy_weather_clean.csv")
-daily_energy_weather_all <- read_csv("../4_cleaned_data/daily_energy_weather_all.csv")
+daily_energy_weather_all <- read_csv("../4_cleaned_data/daily_energy_weather_all.csv") # w/out hholds removed
+
+# weather only to look simply at this data (by day)
+daily_weather <- read_csv("../4_cleaned_data/daily_weather_clean.csv")
 ```
 
-### Joined data
-
-```{r}
-# cleaned households
-view(skimr::skim(daily_energy_weather))
-```
-
-* Temperatures (min, mean, max) and pressure values look normally distributed (at a glance)
-* Cloud cover is left skewed (i.e. lots at higher values, long beginning tail)
-* Rest are right skewed (i.e. lots a lower values, long ending tail)
-
-Scales are different: 1s, 10s, and pressure is in 100,0000s
-
-853 rows missing cloud_cover values
-
-min values of 0: kWh, cloud cover, sunshine, precipitation, snow_depth -- 0 would be a real value for all of these, see units below.
-
-```{r}
-# all households
-view(skimr::skim(daily_energy_weather_all))
-```
-
-Very similar overview stats here, just slightly shifted kWh distribution (p25 changed)
 
 ## About the weather observations
 
@@ -99,27 +81,661 @@ measurement in centimeters (cm) - so 0 is true 0 here (meaning no snow).
 
 May be useful to convert to snow yes/no, since it is a rare occurrence, and depth may not make much difference beyond the temp measurement (any snow means it's a cold day).
 
+## Skim
 
-## Assertions about data
+```{r}
+view(skimr::skim(daily_weather))
+```
 
-Improve cleaning/preparations steps using assertions - to stop if data is not as expected
+1 missing value for cloud_cover
+
+* Temperatures (min, mean, max) and pressure values look normally distributed, max_temp most so, mean_temp still looks ok, min_temp might be a little right skewed
+* Cloud cover is left skewed (i.e. lots at higher values, long beginning tail)
+* Rest (sunshine, radiation, precipitation, snow_depth) are right skewed (i.e. lots a lower values, long ending tail)
+
+Scales are different: 1s, 10s, and pressure is in 100,0000s
+
+min values of 0: kWh, cloud cover, sunshine, precipitation, snow_depth -- 0 would be a real value for all of these, see units below.
+
+## [ ] Assertions about data
+
+Improve cleaning/preparations steps for weather data
+
+Include assertions to stop or warn if data is not as expected:
 
 * numeric data:
   * cloud cover >=0 & <= 8 (okta scale is set to 0-8)
   * sunshine >=0 & <= 24 (can only be 0 - 24 hours)
-  * *_temp >= -10 & <= 60 (i.e. use reasonable cutoffs for temperature in UK)
-  * max_temp >= min_temp & max_temp >= mean_temp & mean_temp >= min_temp
+  * *_temp >= -20 & <= 50 (i.e. use reasonable cutoffs for temperature in UK)
+  * DO NOT USE THESE: max_temp >= min_temp & max_temp >= mean_temp & mean_temp >= min_temp
 * date format:
   * date: >= start_date & <= end_date (as specified)
-* 
 
-_WIP_
+### Cleaning steps for weather data
 
-## Look for correlations
+Other cleaning steps:
+
+* add quality col to note the days where 
+  * mean_temp > max_temp (it shouldn't be!)
+  * min_temp > max_temp
+* convert pressure to atm pressure units (i.e. / 101,325 Pa) - _no need, not using in this iteration_
+* add var for snow yes/no
+* add var for precipitation yes/no
+* if not using season/month, could add temp_levels factor (low, medium, high - work out how) - _not doing in this iteration_
+
+```{r}
+daily_weather_trim <- read_csv("../3_raw_data/london_weather.csv") %>% 
+  janitor::clean_names() %>% 
+  mutate(date = ymd(date)) %>% 
+  filter(as_date(date) >= start_date & as_date(date) <= end_date)
+```
+
+```{r}
+daily_weather_clean <- daily_weather_trim %>% 
+  # add quality col to note the days where (1) mean_temp > max_temp 
+  # and (2) min_temp > max_temp
+  mutate(temp_qual = case_when(
+    mean_temp > max_temp & min_temp > max_temp ~ "warning: max temp less than min temp and mean temp",
+    mean_temp > max_temp ~ "warning: max temp less than mean temp",
+    min_temp > max_temp ~ "warning: max temp less than min temp",
+    .default = NA_character_
+  )) %>% 
+  # add var for snow yes/no
+  mutate(snow_tf = if_else(snow_depth > 0, T, F), .before = snow_depth) %>% 
+  # add var for precipitation yes/no
+  mutate(precipitation_tf = if_else(precipitation > 0, T, F), .before = precipitation)
+```
+
+```{r}
+daily_weather_clean %>% 
+  summarise(count = n(), .by = temp_qual)
+```
+
+```{r}
+daily_weather_clean %>% 
+  select(snow_tf, snow_depth) %>% 
+  summarise(snowy_days = n(), .by = snow_tf)
+```
+
+```{r}
+daily_weather_clean %>% 
+  summarise(rainy_days = n(), .by = precipitation_tf)
+```
+
+Summary from these cleaning steps:
+
+**include in write-up**
+
+* Data quality note: 64 dates where max temp < mean temp, of which 14 dates where max temp also less than min temp.
+* 10 days with snow, 810 days without
+* 446 days with precipitation, out of 820
+
+### [ ] Cleaning steps for energy data
+
+In energy data prep:
+
+* check for any NA_character_ <-- would have been created through my recoding steps
+* assert kwh >= 0 & kwh < 500 (reasonable upper limit cutoff)
+* assert date >= start_date & <= end_date (as specified)
+
+### check data quality
+
+Assertions above pass, except for the following, for which add data quality cols to note these!
+
+* 64 days where max_temp < mean_temp value
+* 14 days where min_temp > max_temp
+* 1 day where min == max, but mean is larger
+
+```{r}
+daily_weather %>% 
+  filter(min_temp == max_temp)
+```
+
+
+# Explore correlations
 
 Use `daily_energy_weather` for cleaned households and `daily_energy_weather_all` to include all households (e.g. with lots of 0s, in case of solar panels)
 
+_Note: ggpairs or pairs.panels not running right now_
 
 
+## kwh ~ mean_temp
+
+```{r}
+daily_energy_weather_all %>% 
+  ggplot() +
+  geom_point(aes(x = mean_temp, y = kwh))
+```
+
+There are points with much higher usages as lower temperatures - are they the same household?
+
+
+```{r}
+daily_energy_weather_all %>% 
+  filter(kwh > 150) %>% 
+  ggplot() +
+  geom_point(aes(x = mean_temp, y = kwh, colour = lc_lid))
+```
+
+They are not the same households, but are only a small number (22) of the 5,500 total (note: this is the uncleaned dataset)
+
+Check also with the cleaned dataset
+
+```{r}
+daily_energy_weather %>% 
+  ggplot() +
+  geom_point(aes(x = mean_temp, y = kwh))
+```
+
+
+```{r}
+daily_energy_weather %>% 
+  filter(kwh > 150) %>% 
+  ggplot() +
+  geom_point(aes(x = mean_temp, y = kwh, colour = lc_lid))
+```
+
+We've only lost on household from the cleaning step
+
+## kwh ~ sunshine
+
+```{r}
+daily_energy_weather_all %>% 
+  ggplot() +
+  geom_point(aes(x = sunshine, y = kwh))
+```
+
+General trend of lower kWh as number of sunshine hours increases
+
+Some households with much higher use (>150 kwh) when sunshine less (<8 hours) -- remember sunshine hours might be factor of season
+
+```{r}
+daily_energy_weather_all %>% 
+  filter(kwh > 150) %>% 
+  ggplot() +
+  geom_point(aes(x = sunshine, y = kwh, colour = lc_lid))
+```
+
+## kwh ~ radiation
+
+```{r}
+daily_energy_weather_all %>% 
+  ggplot() +
+  geom_point(aes(x = global_radiation, y = kwh))
+```
+
+Same pattern... high use on low radiation days
+
+Find any middle users who drop to zero at high radiation (consider solar panels)?
+
+```{r}
+daily_energy_weather_all %>% 
+  filter(kwh > 150) %>% 
+  ggplot() +
+  geom_point(aes(x = global_radiation, y = kwh, colour = lc_lid))
+```
+
+## kwh ~ precipitation
+
+```{r}
+daily_energy_weather_all %>% 
+  ggplot() +
+  geom_point(aes(x = precipitation, y = kwh))
+```
+
+Most days have low precipitation, some high values on these days. No obvious pattern for energy usage at higher precipitation.
+
+Suggest dropping precipitation.
+
+## kwh ~ snow_depth
+
+```{r}
+daily_energy_weather_all %>% 
+  ggplot() +
+  geom_point(aes(x = snow_depth, y = kwh))
+```
+ Most days have no snow... filter for > 0
+ 
+```{r}
+daily_energy_weather_all %>% 
+  filter(snow_depth > 0) %>% 
+  mutate(snow_depth = factor(snow_depth)) %>% 
+  ggplot() +
+  geom_boxplot(aes(x = snow_depth, y = kwh))
+```
+ 
+No correlation here, drop snow_depth
+
+Look at snow yes/no:
+
+```{r}
+daily_energy_weather_all %>% 
+  mutate(snow = if_else(snow_depth == 0, F, T)) %>% 
+  ggplot() +
+  geom_boxplot(aes(x = snow, y = kwh))
+# note this does not account for within-household relationship!
+```
+
+Would need to look at kWh change based on snow yes/no
+
+## kwh ~ pressure
+
+```{r}
+daily_energy_weather_all %>% 
+  ggplot() +
+  geom_point(aes(x = pressure, y = kwh))
+```
+
+No discernible neg/pos correlation with kWh here, suggest dropping pressure
+
+## kwh ~ cloud_cover
+
+Note cloud cover is not continuous numeric, it's a scale system, make it a factor...
+
+```{r}
+daily_energy_weather_all %>% 
+  mutate(cloud_cover = factor(cloud_cover)) %>% 
+  ggplot() +
+  geom_boxplot(aes(x = cloud_cover, y = kwh))
+```
+
+No discerinble pattern here
+
+## kwh ~ min_temp
+
+```{r}
+daily_energy_weather_all %>% 
+  ggplot() +
+  geom_point(aes(x = min_temp, y = kwh))
+```
+
+Similar pattern to mean_temp 
+
+## kwh ~ max_temp
+
+```{r}
+daily_energy_weather_all %>% 
+  ggplot() +
+  geom_point(aes(x = max_temp, y = kwh))
+```
+
+Again similar pattern to mean_temp
+
+# understand weather and month correlations
+
+e.g. sunshine hours, radiation, mean_temp
+
+```{r}
+daily_weather %>% 
+  ggplot(aes(x = sunshine, y = mean_temp)) +
+  geom_point() +
+  geom_smooth()
+```
+
+Default line of best fit is not straight, but typically as sunshine hours increase, mean_temp increases
+
+```{r}
+daily_weather %>% 
+  ggplot(aes(x = sunshine, y = mean_temp)) +
+  geom_point() +
+  geom_smooth(method = lm)
+```
+
+Clearly a positive correlation here, so take care with using mean_temp and sunshine hours
+
+Why are there values with 0 sunshine hours? Look at cloud cover...
+
+```{r}
+daily_weather %>% 
+  ggplot(aes(y = sunshine, x = cloud_cover)) +
+  geom_point()
+```
+
+There are low numbers of sunshine hours as cloud cover gets high -- suggests the sunshine hours value is more to do with direct sunshine rather than daylight.
+
+Check sunshine hours v radiation
+radiation v cloud_cover too
+
+```{r}
+daily_weather %>% 
+  ggplot(aes(x = sunshine, y = global_radiation)) +
+  geom_point() +
+  geom_smooth()
+```
+
+Very clear positive correlation here, more sunshine hours = higher radiation
+
+```{r}
+daily_weather %>% 
+  ggplot(aes(y = global_radiation, x = cloud_cover)) +
+  geom_point()
+```
+
+## time ~ energy
+
+### month ~ energy
+
+```{r}
+daily_energy_weather %>% 
+  ggplot(aes(x = month, y = kwh)) +
+  geom_boxplot()
+
+daily_energy_weather_all %>% 
+  ggplot(aes(x = month, y = kwh)) +
+  geom_boxplot()
+```
+
+(Note cleaned only has slight difference to all households)
+
+Very long tail in Q3-Q4 range, making it harder to see medians -- but note energy is higher in Nov-Mar, lower in May - Aug.
+
+### season ~ energy
+
+```{r}
+daily_energy_weather %>% 
+  ggplot(aes(x = season, y = kwh)) +
+  geom_boxplot()
+
+daily_energy_weather_all %>% 
+  ggplot(aes(x = season, y = kwh)) +
+  geom_boxplot()
+```
+
+Does look like summer/winter effect, winter higher energy spend (spring/fall between the two)
+
+### weekday type ~ energy
+
+```{r}
+daily_energy_weather %>% 
+  ggplot(aes(x = weekend, y = kwh)) +
+  geom_boxplot()
+
+daily_energy_weather_all %>% 
+  ggplot(aes(x = weekend, y = kwh)) +
+  geom_boxplot()
+```
+
+Hard to discern a difference here, look with season too
+
+```{r}
+daily_energy_weather %>% 
+  filter(season != "Spring/Autumn") %>% 
+  ggplot(aes(x = weekend, y = kwh)) +
+  geom_boxplot() +
+facet_wrap(~ season)
+
+daily_energy_weather_all %>% 
+  ggplot(aes(x = weekend, y = kwh)) +
+  geom_boxplot() +
+facet_wrap(~ season)
+```
+
+```{r}
+daily_energy_weather %>% 
+  filter(kwh < 100) %>% # zoom in
+  ggplot() +
+  geom_histogram(aes(x = kwh), bins = 100) +
+facet_wrap(weekend ~ season, ncol = 3)
+```
+
+Seasonal decomposition suggest levels were higher on the weekend days. I'm not convinced there is a weekend effect here! At least, cannot see it as global effect. Still worth exploring if there is this for individual households.
+
+## time x weather
+
+### month ~ weather
+
+```{r}
+# same time format changes as in the processed household energy data (see script)
+# use weather only df here to have one row per day, no repeats for diff households
+daily_weather <- daily_weather %>% 
+  mutate(month = month(date, label = TRUE), .after = date) %>% 
+  mutate(wday = wday(date, label = TRUE), .after = month) %>% 
+  mutate(weekend = if_else(wday %in% c("Sat", "Sun"), T, F), .after = wday) %>% 
+  mutate(quarter = quarter(date, type = "date_first", fiscal_start = 12), .after = month) %>% 
+  mutate(yearseason = case_when(
+    quarter == "2011-09-01" ~ "Autumn 2011",
+    quarter == "2011-12-01" ~ "Winter 2011",
+    quarter == "2012-03-01" ~ "Spring 2012",
+    quarter == "2012-06-01" ~ "Summer 2012",
+    quarter == "2012-09-01" ~ "Autumn 2012",
+    quarter == "2012-12-01" ~ "Winter 2012",
+    quarter == "2013-03-01" ~ "Spring 2013",
+    quarter == "2013-06-01" ~ "Summer 2013",
+    quarter == "2013-09-01" ~ "Autumn 2013",
+    quarter == "2013-12-01" ~ "Winter 2013",
+    .default = NA_character_
+  ), .after = quarter) %>% 
+  mutate(yearseason = factor(yearseason, levels = c(
+    "Autumn 2011", "Winter 2011", "Spring 2012", "Summer 2012",
+    "Autumn 2012", "Winter 2012", "Spring 2013", "Summer 2013",
+    "Autumn 2013", "Winter 2013"
+    ))) %>% 
+  mutate(season = case_when(
+    str_detect(yearseason, "Winter") ~ "Winter",
+    str_detect(yearseason, "Summer") ~ "Summer",
+    str_detect(yearseason, "Spring|Autumn") ~ "Spring/Autumn",
+    .default = NA_character_
+  ), .after = month)
+
+daily_weather
+```
+
+```{r}
+daily_weather %>% 
+  ggplot(aes(x = month, y = mean_temp)) +
+  geom_boxplot()
+```
+
+So mean temperature is a factor of month, higher temps in summer, lower in winter.
+
+Could use January and July or Dec-Feb and June - Aug as set time periods to look at individually
+
+```{r}
+# sunshine
+daily_weather %>% 
+  ggplot(aes(x = month, y = sunshine)) +
+  geom_boxplot()
+```
+
+Sunshine relationship is less clearly by month - although lower in Dec/Jan,  highest in July
+
+```{r}
+daily_weather %>% 
+  ggplot(aes(x = month, y = global_radiation)) +
+  geom_boxplot()
+```
+
+Radiation is a factor of month too, similar to temp
+
+```{r}
+daily_weather %>% 
+  ggplot(aes(x = month, y = cloud_cover)) +
+  geom_boxplot()
+```
+Less a seasonal pattern, note cloud cover looks lowest in July/Aug/Sept
+
+```{r}
+daily_weather %>% 
+  filter(snow_depth > 0) %>% 
+  ggplot(aes(x = month, y = snow_depth)) +
+  geom_boxplot()
+```
+
+Only Jan and Feb have any snow, maybe more snow in Jan than Feb
+
+Only useful to look at snow_Depth ~ kwh in Jan/Feb months - but even filtering for only days with some snow --> no correlations with kWh (se bloxplots above)
+
+### season ~ weather
+
+```{r}
+daily_weather %>% 
+  ggplot(aes(x = yearseason, y = mean_temp)) +
+  geom_boxplot() +
+  theme(axis.text = element_text(angle = 45))
+```
+
+```{r}
+daily_weather %>% 
+  ggplot(aes(x = season, y = mean_temp)) +
+  geom_boxplot()
+```
+
+Clear seasonal variation in temperature
+
+```{r}
+daily_weather %>% 
+  ggplot(aes(x = yearseason, y = cloud_cover)) +
+  geom_boxplot() +
+  theme(axis.text = element_text(angle = 45))
+```
+
+Less obvious differences, see lowest cloud_cover in Summer 2013
+
+```{r}
+daily_weather %>% 
+  ggplot(aes(x = yearseason, y = sunshine)) +
+  geom_boxplot() +
+  theme(axis.text = element_text(angle = 45))
+```
+
+Generally higher in summer, lower in winter, but variable (eg spring 2012 == summer 2012, Winter 2012 particularly low)
+
+```{r}
+daily_weather %>% 
+  ggplot(aes(x = yearseason, y = global_radiation)) +
+  geom_boxplot() +
+  theme(axis.text = element_text(angle = 45))
+```
+
+Very clear seasonal variation in radiation, higher in spring/summer, lower in autumn/winter
+
+
+Summary of seasonal effects:
+
+* temperature - yes, very clear, summer high, winter low
+* cloud_cover - not clearly, but dip in summer 2013
+* sunshine - yes, but varies year on year
+* global_radiation - yes, very clear, spring/summer high, autumn/winter low
+
+
+### weekday type ~ weather
+
+Assume it's not related
+
+```{r}
+daily_weather %>% 
+  ggplot(aes(x = weekend, y = mean_temp)) +
+  geom_boxplot()
+```
+
+```{r}
+daily_weather %>% 
+  ggplot(aes(x = weekend, y = global_radiation)) +
+  geom_boxplot()
+```
+
+```{r}
+daily_weather %>% 
+  ggplot(aes(x = weekend, y = sunshine)) +
+  geom_boxplot()
+```
+
+```{r}
+daily_weather %>% 
+  ggplot(aes(x = weekend, y = cloud_cover)) +
+  geom_boxplot()
+```
+
+Clearly no relationship between weather and weekday type (weekend or not).
+
+## summary of predictors to consider
+
+Weather values to consider:
+
+* temp (use mean, drop min/max)
+* sunshine hours (use instead of radiation or cloud_cover (aliases); check corr with month too and beware)
+
+Drop pressure, precipitation
+
+Note lots of factors are inter-related, these are **not independent variables**. 
+
+Potential aliases with date / month / season:
+
+* temperature and radiation - clear seasonal pattern, month-by-month
+* maybe sunshine - but less distinct
+* cloud_cover lowest in Jul/Aug - less of a transitional pattern though
+* snow only happens in Jan/Feb
+
+Use these as descriptive elements about energy use - only factor in temp and sunshine hours in potential models -- avoid aliasing with month
+
+Time factors as predictos:
+
+* month or season, if not using weather factors
+* weekday tyep (weekend T/F) - to see if individual households change schedules
+
+## work out predictors that summarise household behaviour
+
+Weather values to consider:
+
+* mean_temp
+* sunshine
+
+But beware seasonal relationship. Can include with weekend y/n, not with month.
+
+So can try:
+
+* year-round predictors with temp, sunshine, weekend OR month, weekend
+* or do winter-only model, summer-only models - and don't include month
+
+--> make predictors that cover both scenarios (e.g. winter variation)
+
+Try to reduce to 1 row per household, with calculated variables explaining relationship with these predictors
+
+e.g. find slope from high to low weather value, and look at change in kwh (as % change?)
+
+i.e. find the coefficients for lm per household? Have a look at a few individual households...
+
+Simpler: 
+
+* mean/median(winter 2013 (--> Feb 2014))
+* mean/median(summer 2013)
+* mean/median(July 2013) - as most recent (and most number households)
+* mean/median(January 2014) - as most recent (and most number households)
+* mean(summer) - mean(winter) kwh as summer/winter difference 
+* max(winter) - min(winter) as within-winter variation (or iqr)
+* max(summer) - min(summer) as within-summer variation (or iqr)
+* mean of top 10 highest kwh -- helps reduce effect of any really big values
+* mean of bottom 10 non-zero kwh -- filter out 0s first
+* number recorded days (so can eliminate if needed)
+* % recorded days with 0 kWh (so can eliminate if needed)
+* % recorded days with >150 kWh (e.g.)
+* relative winter weekend diff (% change): 100 * avg(weekendTwinter) - avg(weekendFwinter) / avg(winter) -- or use sd or iqr
+* relative summer weekend diff: 100 * avg(weekendTwinter) - avg(weekendFwinter) / avg(summer) -- or use sd or iqr
+* something to do with temp -- note potential alias with winter/summer things
+* something to do with sunshine -- note potential alias with winter/summer things
+
+To aid in colouring plots for exploration, but not for clustering:
+
+* label households with any kWh days > 150 (e.g.) as high users -- for colouring plots later
+* label households as high/average/low as to how their median kwh falls in with sample median -- e.g. use 0-10%, 10-20%,20-50%, 50-80%, 80-90%, 90-100% deciles
+* label households with any kWh = 0 days
+
+Instead of winter/summer, could use Jan/July -- but figure that energy pattern is likely related to when people switch on heating schedules again, and this is probably more relevant to winter/summer rather than one month, also using only one month reduces the size of the data available. Could include both ways and see which seem to have strongest correlations.
+
+Use 2013/2014 seasons/months as most recent ones (Summer 2013, July 2013, Winter 2013, January 2014), with most number of households. Cleanest data in terms of household behaviour pattern - avoids potential for differing behaviour year-on-year. 
+
+## Possible clusters
+
+In summary, look out for:
+
+* high energy consumption at lower temperatures (i.e. >=150 kWh at < 13 degrees C)
+* high energy consumption at low sunshine hours - bear in mind relationship to season
+* same for radiation
+
+Look at the ~20 households with kwh values higher than 150 kWh -- model these individually?
+
+Think about user behaviour: do people adjust their heating according to daily temp? Or do they turn it on when it gets to colder months, and leave it on until it's spring again - i.e. month and weekend/weekday is more useful as a pattern of heating schedules
+
+Also look for households whoese kwh drops on sunny days (low cloud cover, high sunshine hours, high radiation) - to spot those with solar panels?
 
 

@@ -145,11 +145,23 @@ median_all_daily_energy_ts <- median_all_daily_energy_ts %>%
 ```
 
 ```{r}
+# graph for EST
 median_all_daily_energy_ts %>% 
   ggplot() + 
   geom_line(aes(x = date, y = median_kwh), colour = "grey") + 
-  geom_line(aes(x = date, y = kwh_moving_avg), colour = "red") +
-  theme_minimal()
+  geom_line(aes(x = date, y = kwh_moving_avg), colour = "#65a346", size = 2) +
+  theme_classic() +
+  labs(x = "\nDate",
+       y = "Median energy consumption (kWh)\n",
+       title = "Energy consumption over time",
+       subtitle = "~5,500 households in London",
+       caption = "Green line is 14-day rolling average") +
+  theme(axis.text = element_text(size = 16),
+        axis.title = element_text(size = 14),
+        plot.title = element_text(size = 16),
+        plot.caption = element_text(size = 12))
+
+ggsave("all_hh_over_time_rolling.png", height = 10, units = "cm", dpi = 300)
 ```
 
 Need to look at seasonal decomposition.
@@ -250,10 +262,18 @@ daily_energy %>%
 
 ```{r}
 daily_energy %>% 
-  filter(lc_lid %in% c("MAC000002", "MAC000058", "MAC000359", "MAC000714", "MAC000933", "MAC000997")) %>% 
+  filter(lc_lid %in% c("MAC000008", "MAC000058", "MAC000359", "MAC000997")) %>% 
   ggplot(aes(x = date, y = kwh, colour = lc_lid)) +
-  geom_line() +
-  facet_wrap(~lc_lid)
+  geom_line(show.legend = FALSE) +
+  facet_wrap(~lc_lid) + 
+  theme_classic() +
+  labs(y = "Energy consumption (kWh)\n", x = "\nDate", title = "Energy consumption of individual households") +
+  theme(axis.text.y = element_text(size = 16),
+        axis.title = element_text(size = 14),
+        plot.title = element_text(size = 20)) +
+  scale_colour_manual(values = c("#65a346", "#15487a", "#611bb8", "#414f5a"))
+
+ggsave("four_hholds.png", dpi = 300)
 ```
 
 Can already see households are behaving differently, some high consumers, others less so; some change over the year, some less so.

@@ -1752,114 +1752,30 @@ display: none;
 
 
 <!-- rnb-text-begin -->
+<div id="setup-and-load-data" class="section level1">
+<h1>Setup and load data</h1>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeSh0aWR5dmVyc2UpXG5saWJyYXJ5KGdncGxvdDIpXG5saWJyYXJ5KGx1YnJpZGF0ZSlcbmxpYnJhcnkoR0dhbGx5KSAjIGZvciBnZ3BhaXJzIHRvIGV4cGxvcmUgY29ycmVsYXRpb25zXG5gYGAifQ== -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeSh0aWR5dmVyc2UpXG5saWJyYXJ5KGdncGxvdDIpXG5saWJyYXJ5KGx1YnJpZGF0ZSlcbmxpYnJhcnkoR0dhbGx5KSAjIGZvciBnZ3BhaXJzIHRvIGV4cGxvcmUgY29ycmVsYXRpb25zXG5saWJyYXJ5KHBzeWNoKSAjIGZvciBwYWlycGxvdHMgdG8gZXhwbG9yZSBjb3JyZWxhdGlvbnNcbmBgYCJ9 -->
 <pre class="r"><code>library(tidyverse)
 library(ggplot2)
 library(lubridate)
-library(GGally) # for ggpairs to explore correlations</code></pre>
+library(GGally) # for ggpairs to explore correlations
+library(psych) # for pairplots to explore correlations</code></pre>
 <!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiUmVnaXN0ZXJlZCBTMyBtZXRob2Qgb3ZlcndyaXR0ZW4gYnkgJ0dHYWxseSc6XG4gIG1ldGhvZCBmcm9tICAgXG4gICsuZ2cgICBnZ3Bsb3QyXG4ifQ== -->
-<pre><code>Registered S3 method overwritten by &#39;GGally&#39;:
-  method from   
-  +.gg   ggplot2</code></pre>
-<!-- rnb-output-end -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeShwc3ljaCkgIyBmb3IgcGFpcnBsb3RzIHRvIGV4cGxvcmUgY29ycmVsYXRpb25zXG5gYGAifQ== -->
-<pre class="r"><code>library(psych) # for pairplots to explore correlations</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiXG5BdHRhY2hpbmcgcGFja2FnZTog4oCYcHN5Y2jigJlcblxuVGhlIGZvbGxvd2luZyBvYmplY3RzIGFyZSBtYXNrZWQgZnJvbSDigJhwYWNrYWdlOmdncGxvdDLigJk6XG5cbiAgICAlKyUsIGFscGhhXG4ifQ== -->
-<pre><code>
-Attaching package: ‘psych’
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfZW5lcmd5X3dlYXRoZXIgPC0gcmVhZF9jc3YoXCIuLi80X2NsZWFuZWRfZGF0YS9kYWlseV9lbmVyZ3lfd2VhdGhlcl9jbGVhbi5jc3ZcIilcbmRhaWx5X2VuZXJneV93ZWF0aGVyX2FsbCA8LSByZWFkX2NzdihcIi4uLzRfY2xlYW5lZF9kYXRhL2RhaWx5X2VuZXJneV93ZWF0aGVyX2FsbC5jc3ZcIikgIyB3L291dCBoaG9sZHMgcmVtb3ZlZFxuXG4jIHdlYXRoZXIgb25seSB0byBsb29rIHNpbXBseSBhdCB0aGlzIGRhdGEgKGJ5IGRheSlcbmRhaWx5X3dlYXRoZXIgPC0gcmVhZF9jc3YoXCIuLi80X2NsZWFuZWRfZGF0YS9kYWlseV93ZWF0aGVyX2NsZWFuLmNzdlwiKVxuYGBgIn0= -->
+<pre class="r"><code>daily_energy_weather &lt;- read_csv(&quot;../4_cleaned_data/daily_energy_weather_clean.csv&quot;)
+daily_energy_weather_all &lt;- read_csv(&quot;../4_cleaned_data/daily_energy_weather_all.csv&quot;) # w/out hholds removed
 
-The following objects are masked from ‘package:ggplot2’:
-
-    %+%, alpha</code></pre>
-<!-- rnb-output-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfZW5lcmd5X3dlYXRoZXJfYWxsIDwtIHJlYWRfY3N2KFwiLi4vNF9jbGVhbmVkX2RhdGEvZGFpbHlfZW5lcmd5X3dlYXRoZXJfYWxsLmNzdlwiKVxuXG5gYGAifQ== -->
-<pre class="r"><code>daily_energy_weather_all &lt;- read_csv(&quot;../4_cleaned_data/daily_energy_weather_all.csv&quot;)
-</code></pre>
+# weather only to look simply at this data (by day)
+daily_weather &lt;- read_csv(&quot;../4_cleaned_data/daily_weather_clean.csv&quot;)</code></pre>
 <!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiUm93czogMzUwNTEwMCBDb2x1bW5zOiAxMuKUgOKUgCBDb2x1bW4gc3BlY2lmaWNhdGlvbiDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIBcbkRlbGltaXRlcjogXCIsXCJcbmNociAgICgxKTogbGNfbGlkXG5kYmwgICgxMCk6IGt3aCwgY2xvdWRfY292ZXIsIHN1bnNoaW5lLCBnbG9iYWxfcmFkaWF0aW9uLCBtYXhfdGVtcCwgbWVhbl90ZW1wLCBtaW5fdGVtcCwgcHJlY2lwaXRhLi4uXG5kYXRlICAoMSk6IGRhdGVcbuKEuSBVc2UgYHNwZWMoKWAgdG8gcmV0cmlldmUgdGhlIGZ1bGwgY29sdW1uIHNwZWNpZmljYXRpb24gZm9yIHRoaXMgZGF0YS5cbuKEuSBTcGVjaWZ5IHRoZSBjb2x1bW4gdHlwZXMgb3Igc2V0IGBzaG93X2NvbF90eXBlcyA9IEZBTFNFYCB0byBxdWlldCB0aGlzIG1lc3NhZ2UuXG4ifQ== -->
-<pre><code>Rows: 3505100 Columns: 12── Column specification ─────────────────────────────────────────────────────────────────────────────
-Delimiter: &quot;,&quot;
-chr   (1): lc_lid
-dbl  (10): kwh, cloud_cover, sunshine, global_radiation, max_temp, mean_temp, min_temp, precipita...
-date  (1): date
-ℹ Use `spec()` to retrieve the full column specification for this data.
-ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
-<!-- rnb-output-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
-<div id="joined-data" class="section level3">
-<h3>Joined data</h3>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuc2tpbXI6OnNraW0oZGFpbHlfZW5lcmd5X3dlYXRoZXIpXG5cbmBgYCJ9 -->
-<pre class="r"><code>skimr::skim(daily_energy_weather)
-</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoi4pSA4pSAIERhdGEgU3VtbWFyeSDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIBcbiAgICAgICAgICAgICAgICAgICAgICAgICAgIFZhbHVlcyAgICAgICAgICAgICAgXG5OYW1lICAgICAgICAgICAgICAgICAgICAgICBkYWlseV9lbmVyZ3lfd2VhdGhlclxuTnVtYmVyIG9mIHJvd3MgICAgICAgICAgICAgMzQ2NjM4NyAgICAgICAgICAgICBcbk51bWJlciBvZiBjb2x1bW5zICAgICAgICAgIDEyICAgICAgICAgICAgICAgICAgXG5fX19fX19fX19fX19fX19fX19fX19fXyAgICAgICAgICAgICAgICAgICAgICAgIFxuQ29sdW1uIHR5cGUgZnJlcXVlbmN5OiAgICAgICAgICAgICAgICAgICAgICAgICBcbiAgY2hhcmFjdGVyICAgICAgICAgICAgICAgIDEgICAgICAgICAgICAgICAgICAgXG4gIERhdGUgICAgICAgICAgICAgICAgICAgICAxICAgICAgICAgICAgICAgICAgIFxuICBudW1lcmljICAgICAgICAgICAgICAgICAgMTAgICAgICAgICAgICAgICAgICBcbl9fX19fX19fX19fX19fX19fX19fX19fXyAgICAgICAgICAgICAgICAgICAgICAgXG5Hcm91cCB2YXJpYWJsZXMgICAgICAgICAgICBOb25lICAgICAgICAgICAgICAgIFxuIn0= -->
-<pre><code>── Data Summary ────────────────────────
-                           Values              
-Name                       daily_energy_weather
-Number of rows             3466387             
-Number of columns          12                  
-_______________________                        
-Column type frequency:                         
-  character                1                   
-  Date                     1                   
-  numeric                  10                  
-________________________                       
-Group variables            None                </code></pre>
-<!-- rnb-output-end -->
-<!-- rnb-frame-begin eyJtZXRhZGF0YSI6eyJjbGFzc2VzIjpbIm9uZV9za2ltX2RmIiwidGJsX2RmIiwidGJsIiwiZGF0YS5mcmFtZSJdLCJucm93IjoxLCJuY29sIjo4LCJzdW1tYXJ5Ijp7IkEgdGliYmxlIjpbIjEgw5cgOCJdfX0sInJkZiI6Ikg0c0lBQUFBQUFBQUE2MVRXMjRUTVJSMTVwVmtSQXBTQmJ0SVZDZ1YvUEZUc1FBRVV2OWNaK1kyWTJYc01iYUhkUDY2aDI2UkJiQ0NGbnN5TncrM0lENndOTW54OGZHMTcvVzVYeTZ2enZPcm5CQVNreVFla1RoMWtLVGZ2bjZlZnlRa2lkeGtSQkl5OWYrM1RuVHF3TVI5cnc0V3NycWdOUzhkbXZYc2RweDQvT2tYd1lGcjB6L2dBODNyNVRGL2RJMVVNZ0ZtdU1Ka0lHZG16UVg5d1RSbnl4b0djaXFwNE1ad3VVSlYwUWhWZ3dXcW1VVlZMTGpjUVhhTHA0QlF0aHNtRTBsYnliKzN1Q1hmVk55Q1VheUE0SEpUM1d3V2VFR2ZRWFRuZmg3ZENJVWxzNHc2dGRtbCt2N24vYk9pb3FuM0lrSmVCS0p4ZVVQOWljR2p2TGt1R2E4N0NoTDBxcU1iWUxZQ2ZSMXN6a3BMMTlENW5EeDc5N1RjMlVvM3JjSjZoNnV6SlROQWZmRUZhQlJGLzFqL0lCUkdvYTBCWjZib3REZmxObVQ2bng2ckQ1YjhOVmdtb09STVBvbDJiTGhFd0U0VG1SS1JPc09BNnQzRkRsN3MyUS9JSnVydEdkSkp4WTNkbGlONkhBNktzWWhGeFRRckxHZ1VYKzY5TzVhdHF4Z3ZISHdJdmROM2hPMVVhSXlEZ0VGakZUVXpKbERuM29LTEc3MDFXSGpJdUZHV045SU1yNVVHbTBjNklGNjIwbHUxbkJkVks5ZnpjL1RkOE0yZXdaT2dMdWlFRE9TS1N5eEVXck1sMU1Qa3hMVlYzNE1McGJtMG1JbHZ0b1Z0TEVOZDdqdHJZUHJjeU1OdmhZUENIUThGQUFBPSJ9 -->
-<div data-pagedtable="false">
-<script data-pagedtable-source type="application/json">
-{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["skim_variable"],"name":[1],"type":["chr"],"align":["left"]},{"label":["n_missing"],"name":[2],"type":["int"],"align":["right"]},{"label":["complete_rate"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["min"],"name":[4],"type":["int"],"align":["right"]},{"label":["max"],"name":[5],"type":["int"],"align":["right"]},{"label":["empty"],"name":[6],"type":["int"],"align":["right"]},{"label":["n_unique"],"name":[7],"type":["int"],"align":["right"]},{"label":["whitespace"],"name":[8],"type":["int"],"align":["right"]}],"data":[{"1":"lc_lid","2":"0","3":"1","4":"9","5":"9","6":"0","7":"5474","8":"0","_rn_":"1"}],"options":{"columns":{"min":{},"max":[10],"total":[8]},"rows":{"min":[10],"max":[10],"total":[1]},"pages":{}}}
-  </script>
-</div>
-<!-- rnb-frame-end -->
-<!-- rnb-frame-begin eyJtZXRhZGF0YSI6eyJjbGFzc2VzIjpbIm9uZV9za2ltX2RmIiwidGJsX2RmIiwidGJsIiwiZGF0YS5mcmFtZSJdLCJucm93IjoxLCJuY29sIjo3LCJzdW1tYXJ5Ijp7IkEgdGliYmxlIjpbIjEgw5cgNyJdfX0sInJkZiI6Ikg0c0lBQUFBQUFBQUE1MVV3VzdVTUJEMWJwSk5OMkpMcFVyOHhhNEtiUVUzT0ZSOFFBVlNiNjQzbVc2c1RaeGdPMnh6NnovMHU0QXpkOFNaTDJpeEUwL0t1aXVvaUJSbFp2Sm1NbjR6TCtkbkY4ZkpSVUlJQ1VnWWpFZ1FHWk5FSHorOG43OGhKQndiWjBSQ01yWFBhd002TkVaczdvTS9Yb1FaMDJDZXN5N1dYL3ZXZnZ2TGVTVG8vSGRmZnQ3MC9sYmhLQzJZVW43UnM3N28zWkQ4emVWMnllUDdmK0svZm44aUhoc1BUdnpHQkNzQkc0dGRjS2JXdktTZm1lUnNXWUFMVGdVdHVWSmNyQkNWVm1WZGdBWXE3WGY2WUZCeU1aanMycG1URWpMTzhNV2VvSTNnbnhyd2VwbkthclBBZm16RFkwdkh2Ymw4b0prR293YXRocE9kL0xqZENVcXI0Z0ZFeURNUEZHZFgxSDdSWSs3RlpjWjQwVklRSUZjdDNRRFRPY2hMTDNtU2FicUcxbGgydVVZM2o4YytXY21xcVpGZS8rMXN5UlJReTNVSkVrSGpKOUx0bGNJcXRGR1FtU3FIM2JyM0phTy96aWFDc3RidG85SDBmckxKdVFaVnN4UXBDdjl2MEYzdUhpNW1DUU5tckRLMDZpTXNXTDg2SGN6VGgraHJqSWIxeXlNTWh6bFh1cWNqUUFVRVNHS2FNOGxTRFhKTEVtNzJvakdNOGJSWHlQYnVkQUxRYmUwdmhwUFVUcmtsZHVFV1Y3SmZKNzlrWE5XYVYwSzUyVVJlOGtoNmdlZU5zSXVaemRPOEVldjVNVzZadTJjNzdOaGpBZWMrQWJIaUFvOGRGV3dKaFhQMmpZZzZ4UzFxeVlYR2sxaHBMWFNsR2VJU3F5TVg2WDhvZDc4Qnh3eS9hMWNGQUFBPSJ9 -->
-<div data-pagedtable="false">
-<script data-pagedtable-source type="application/json">
-{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["skim_variable"],"name":[1],"type":["chr"],"align":["left"]},{"label":["n_missing"],"name":[2],"type":["int"],"align":["right"]},{"label":["complete_rate"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["min"],"name":[4],"type":["date"],"align":["right"]},{"label":["max"],"name":[5],"type":["date"],"align":["right"]},{"label":["median"],"name":[6],"type":["date"],"align":["right"]},{"label":["n_unique"],"name":[7],"type":["int"],"align":["right"]}],"data":[{"1":"date","2":"0","3":"1","4":"2011-12-01","5":"2014-02-27","6":"2013-03-30","7":"820","_rn_":"1"}],"options":{"columns":{"min":{},"max":[10],"total":[7]},"rows":{"min":[10],"max":[10],"total":[1]},"pages":{}}}
-  </script>
-</div>
-<!-- rnb-frame-end -->
-<!-- rnb-frame-begin eyJtZXRhZGF0YSI6eyJjbGFzc2VzIjpbIm9uZV9za2ltX2RmIiwidGJsX2RmIiwidGJsIiwiZGF0YS5mcmFtZSJdLCJucm93IjoxMCwibmNvbCI6MTEsInN1bW1hcnkiOnsiQSB0aWJibGUiOlsiMTAgw5cgMTEiXX19LCJyZGYiOiJINHNJQUFBQUFBQUFBN1ZXWFdnY1JSeWZ1NzFMN2paTlVsdXQ5TXRLVEt5QjNyV2ExbXBMZXhOTml3aEJxZ2xVK3JDWjdFNXUxOXV2N3M3bWNxQ2x1ZEJHSDZvRlNhZ0tKVkw2NUlOb0VRWEJCckZpcTRJaUtNRVdKTFJGOU1ING9FYWtpYnM3TTN1NWJXcEZjTWplLytzM3Y1bjV6MzltOG5UUHdTN3hvQWdBRUVCS1NBQWg3YXNnM2QrM1AvY0lBS21rYnlSQUNtUURPZUtEVnZ0S2svK3Q5RCtSQllSU1dXVnFrNnhibmlMSjFqQjJtQ3ZqZXFhcmFpWm05c3FpYmcwaVhYS1FvaUdpV1NiSEdXaEVJdGl3bVowMU1ES1hPaktHVm1jMzJ3NldOVnNqZFN5KzAzVTloNDhtdXFaVmxoUnNFelhvRXM0NmJFSS91SDFyQ2ZDRk9Xb1Vmcm54MTl5bXk0OUg5bitVbkJlMlA3ZDUvNUZoQzY2NjNDWmM3ZWlFcmM4bXpyNjRJTUpEdlh0L2tqZThCM00zM243NXpLNWVlUCt4MDA5MUh2Z1VidndoM3p1M2R3c0U2N1FmciszK0ZzNS8yRGJ4U2QvemhWTWZ2RC94dWZCTXhOdjI4RHZkdjE2OER5WW5wL1o5L2ZFUjJITGxkUGU0dlF2Mm56aDNXUDA1RGRjLzJmSEM3bmRQd2J2SDFJOE96VnlBZHozUmN1SHNESVN0YTJEUGllYTM0TW1KMzE3NXZ2ZU93amRyTDcxeDRPUVU1NzFWa3VBRFZKNi8rRnJRWHA5T2ZSRzBMNmZ2R1FwYmhQdmordlJ5K1lXcnhUMzJtZTlFbUdGNW1xRTg4REhXcjUzSjlWMWhnMWthajNqbkorNWRsbmZUOGZZclc5ZE53VHNaTGtQbkJmc2d0YmN3dmc0VzMwaDVDMndkY1A1OGZLbVV0M1BmbTVlbXgxYkJEYXpmV3NhRGoxSzdpNDJ6bGNuTlRBb01OMzk5WUZsZTh0bTFnZTZYZGtLMkdwaGprbnhGWmZjS3l2TW96U3ZjZm83eTdXSDhmNWJDQ2ZCNUFYNUt3ZEhnSkxUT1RvN1BUbzVHZnpYMzJPemtzZkRYajQvWG9YMWZOWTZPM05VNmR6V01IQStETjdscHBGcHpqNFlPR3FuZWRvS2pTK2hIYjRtdXU2elNKakt3eTFMUXhHOE10NlFaMGpCeU5EU284eHNpYTBxRzVycWFXZVFvMlRKc0hSUHNYMUdFbzFMQmJjVDBwS3R3emQ3RzcwRDdvUjJSdXFQbTNjbTlLZnZCYmR5ZFVqV1h4Q2FjZGF4eW5rODZ1S2VTd1dZdUxpNytIZ2NxaUNESlIzTmdBbXkvK3VxeUlOblNheUFBVnNSQWpjcVFGSXpJc3NUZGF3WVVwT2tWQ1p2WUtWYWtNa1pFeGM1QXJIT0RRcVFTcnRBQ0F3bGErdldJb21ONU50K0RlTFI1RUxsWUNqYkV3QTRISmYvbG5zU29PSXZrdVZqeFdZSkhTbUNVYWI0Vi91c1JxV2lFbDRuL25KQUtmenRNeVRPMXcxNzBkcFJWaldEWFJqSlBVZW9meVJvTTdEOXA1azFzdEcvbWY2Nms1Q0liU09CSmxGWGtJSmxFTDNHcXAxYlBqYWJuWjB5VGZYVWhYanZoS1NFVk8xNFl0VDcxUjAzV2tldkdzR0pRZ1BraGg1WlhmSWhHeXc3ZWJKZnRWVHJXT2VIRUhLMmVHUlNxa3BOVnp5emx1bmpWc1k4WHVMaEViNHBsaGRkQkF6YUx0WDlHMGpvYXhEb3pXdnhERlo3QXZPMW9KdUVyQ1k1YW5sZ0VjWndZbkN2bUNkY0dGdjRHQTB4VWpFY0pBQUE9In0= -->
-<div data-pagedtable="false">
-<script data-pagedtable-source type="application/json">
-{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["skim_variable"],"name":[1],"type":["chr"],"align":["left"]},{"label":["n_missing"],"name":[2],"type":["int"],"align":["right"]},{"label":["complete_rate"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["mean"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["sd"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["p0"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["p25"],"name":[7],"type":["dbl"],"align":["right"]},{"label":["p50"],"name":[8],"type":["dbl"],"align":["right"]},{"label":["p75"],"name":[9],"type":["dbl"],"align":["right"]},{"label":["p100"],"name":[10],"type":["dbl"],"align":["right"]},{"label":["hist"],"name":[11],"type":["chr"],"align":["left"]}],"data":[{"1":"kwh","2":"0","3":"1.0000000","4":"1.020733e+01","5":"9.1068211","6":"0.0","7":"4.76","8":"7.881","9":"12.636","10":"332.556","11":"▇▁▁▁▁","_rn_":"1"},{"1":"cloud_cover","2":"853","3":"0.9997539","4":"4.714974e+00","5":"2.3235479","6":"0.0","7":"3.00","8":"5.000","9":"7.000","10":"8.000","11":"▃▅▃▇▇","_rn_":"2"},{"1":"sunshine","2":"0","3":"1.0000000","4":"3.918460e+00","5":"3.8582120","6":"0.0","7":"0.40","8":"3.100","9":"6.300","10":"14.500","11":"▇▃▂▁▁","_rn_":"3"},{"1":"global_radiation","2":"0","3":"1.0000000","4":"1.092070e+02","5":"86.2140773","6":"12.0","7":"36.00","8":"81.000","9":"172.000","10":"333.000","11":"▇▃▂▂▁","_rn_":"4"},{"1":"max_temp","2":"0","3":"1.0000000","4":"1.499548e+01","5":"6.8224086","6":"-0.2","7":"10.00","8":"14.100","9":"19.800","10":"34.100","11":"▂▇▆▃▁","_rn_":"5"},{"1":"mean_temp","2":"0","3":"1.0000000","4":"1.126097e+01","5":"5.8783293","6":"-2.6","7":"6.80","8":"10.500","9":"15.900","10":"25.400","11":"▂▇▇▆▂","_rn_":"6"},{"1":"min_temp","2":"0","3":"1.0000000","4":"7.468927e+00","5":"5.3203689","6":"-7.6","7":"3.20","8":"7.400","9":"11.900","10":"20.700","11":"▁▆▇▇▂","_rn_":"7"},{"1":"precipitation","2":"0","3":"1.0000000","4":"2.012897e+00","5":"3.8858648","6":"0.0","7":"0.00","8":"0.200","9":"2.400","10":"29.800","11":"▇▁▁▁▁","_rn_":"8"},{"1":"pressure","2":"0","3":"1.0000000","4":"1.012982e+05","5":"1061.4898066","6":"97900.0","7":"100690.00","8":"101360.000","9":"101990.000","10":"104120.000","11":"▁▂▇▆▁","_rn_":"9"},{"1":"snow_depth","2":"0","3":"1.0000000","4":"2.414214e-02","5":"0.2984492","6":"0.0","7":"0.00","8":"0.000","9":"0.000","10":"7.000","11":"▇▁▁▁▁","_rn_":"10"}],"options":{"columns":{"min":{},"max":[10],"total":[11]},"rows":{"min":[10],"max":[10],"total":[10]},"pages":{}}}
-  </script>
-</div>
-<!-- rnb-frame-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<ul>
-<li>Temperatures (min, mean, max) and pressure values look normally
-distributed (at a glance)</li>
-<li>Cloud cover is left skewed (i.e. lots at higher values, long
-beginning tail)</li>
-<li>Rest are right skewed (i.e. lots a lower values, long ending
-tail)</li>
-</ul>
-<p>Scales are different: 1s, 10s, and pressure is in 100,0000s</p>
-<p>853 rows missing cloud_cover values</p>
-<p>min values of 0: kWh, cloud cover, sunshine, precipitation,
-snow_depth – 0 would be a real value for all of these, see units
-below.</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>Very similar overview stats here, just slightly shifted kWh
-distribution (p25 changed)</p>
-</div>
 <div id="about-the-weather-observations" class="section level2">
 <h2>About the weather observations</h2>
 <p>What are the units? See kaggle: <a href="https://www.kaggle.com/datasets/emmanuelfwerr/london-weather-data" class="uri">https://www.kaggle.com/datasets/emmanuelfwerr/london-weather-data</a></p>
@@ -1938,37 +1854,879 @@ occurrence, and depth may not make much difference beyond the temp
 measurement (any snow means it’s a cold day).</p>
 </div>
 </div>
+<div id="skim" class="section level2">
+<h2>Skim</h2>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>1 missing value for cloud_cover</p>
+<ul>
+<li>Temperatures (min, mean, max) and pressure values look normally
+distributed, max_temp most so, mean_temp still looks ok, min_temp might
+be a little right skewed</li>
+<li>Cloud cover is left skewed (i.e. lots at higher values, long
+beginning tail)</li>
+<li>Rest (sunshine, radiation, precipitation, snow_depth) are right
+skewed (i.e. lots a lower values, long ending tail)</li>
+</ul>
+<p>Scales are different: 1s, 10s, and pressure is in 100,0000s</p>
+<p>min values of 0: kWh, cloud cover, sunshine, precipitation,
+snow_depth – 0 would be a real value for all of these, see units
+below.</p>
+</div>
 <div id="assertions-about-data" class="section level2">
-<h2>Assertions about data</h2>
-<p>Improve cleaning/preparations steps using assertions - to stop if
-data is not as expected</p>
+<h2>[ ] Assertions about data</h2>
+<p>Improve cleaning/preparations steps for weather data</p>
+<p>Include assertions to stop or warn if data is not as expected:</p>
 <ul>
 <li>numeric data:
 <ul>
 <li>cloud cover &gt;=0 &amp; &lt;= 8 (okta scale is set to 0-8)</li>
 <li>sunshine &gt;=0 &amp; &lt;= 24 (can only be 0 - 24 hours)</li>
-<li>*_temp &gt;= -10 &amp; &lt;= 60 (i.e. use reasonable cutoffs for
+<li>*_temp &gt;= -20 &amp; &lt;= 50 (i.e. use reasonable cutoffs for
 temperature in UK)</li>
-<li>max_temp &gt;= min_temp &amp; max_temp &gt;= mean_temp &amp;
-mean_temp &gt;= min_temp</li>
+<li>DO NOT USE THESE: max_temp &gt;= min_temp &amp; max_temp &gt;=
+mean_temp &amp; mean_temp &gt;= min_temp</li>
 </ul></li>
 <li>date format:
 <ul>
 <li>date: &gt;= start_date &amp; &lt;= end_date (as specified)</li>
 </ul></li>
-<li></li>
 </ul>
-<p><em>WIP</em></p>
+<div id="cleaning-steps-for-weather-data" class="section level3">
+<h3>Cleaning steps for weather data</h3>
+<p>Other cleaning steps:</p>
+<ul>
+<li>add quality col to note the days where
+<ul>
+<li>mean_temp &gt; max_temp (it shouldn’t be!)</li>
+<li>min_temp &gt; max_temp</li>
+</ul></li>
+<li>convert pressure to atm pressure units (i.e. / 101,325 Pa) - <em>no
+need, not using in this iteration</em></li>
+<li>add var for snow yes/no</li>
+<li>add var for precipitation yes/no</li>
+<li>if not using season/month, could add temp_levels factor (low,
+medium, high - work out how) - <em>not doing in this iteration</em></li>
+</ul>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfd2VhdGhlcl90cmltIDwtIHJlYWRfY3N2KFwiLi4vM19yYXdfZGF0YS9sb25kb25fd2VhdGhlci5jc3ZcIikgJT4lIFxuICBqYW5pdG9yOjpjbGVhbl9uYW1lcygpICU+JSBcbiAgbXV0YXRlKGRhdGUgPSB5bWQoZGF0ZSkpICU+JSBcbiAgZmlsdGVyKGFzX2RhdGUoZGF0ZSkgPj0gc3RhcnRfZGF0ZSAmIGFzX2RhdGUoZGF0ZSkgPD0gZW5kX2RhdGUpXG5gYGAifQ== -->
+<pre class="r"><code>daily_weather_trim &lt;- read_csv(&quot;../3_raw_data/london_weather.csv&quot;) %&gt;% 
+  janitor::clean_names() %&gt;% 
+  mutate(date = ymd(date)) %&gt;% 
+  filter(as_date(date) &gt;= start_date &amp; as_date(date) &lt;= end_date)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfd2VhdGhlcl9jbGVhbiA8LSBkYWlseV93ZWF0aGVyX3RyaW0gJT4lIFxuICAjIGFkZCBxdWFsaXR5IGNvbCB0byBub3RlIHRoZSBkYXlzIHdoZXJlICgxKSBtZWFuX3RlbXAgPiBtYXhfdGVtcCBcbiAgIyBhbmQgKDIpIG1pbl90ZW1wID4gbWF4X3RlbXBcbiAgbXV0YXRlKHRlbXBfcXVhbCA9IGNhc2Vfd2hlbihcbiAgICBtZWFuX3RlbXAgPiBtYXhfdGVtcCAmIG1pbl90ZW1wID4gbWF4X3RlbXAgfiBcIndhcm5pbmc6IG1heCB0ZW1wIGxlc3MgdGhhbiBtaW4gdGVtcCBhbmQgbWVhbiB0ZW1wXCIsXG4gICAgbWVhbl90ZW1wID4gbWF4X3RlbXAgfiBcIndhcm5pbmc6IG1heCB0ZW1wIGxlc3MgdGhhbiBtZWFuIHRlbXBcIixcbiAgICBtaW5fdGVtcCA+IG1heF90ZW1wIH4gXCJ3YXJuaW5nOiBtYXggdGVtcCBsZXNzIHRoYW4gbWluIHRlbXBcIixcbiAgICAuZGVmYXVsdCA9IE5BX2NoYXJhY3Rlcl9cbiAgKSkgJT4lIFxuICAjIGFkZCB2YXIgZm9yIHNub3cgeWVzL25vXG4gIG11dGF0ZShzbm93X3RmID0gaWZfZWxzZShzbm93X2RlcHRoID4gMCwgVCwgRiksIC5iZWZvcmUgPSBzbm93X2RlcHRoKSAlPiUgXG4gICMgYWRkIHZhciBmb3IgcHJlY2lwaXRhdGlvbiB5ZXMvbm9cbiAgbXV0YXRlKHByZWNpcGl0YXRpb25fdGYgPSBpZl9lbHNlKHByZWNpcGl0YXRpb24gPiAwLCBULCBGKSwgLmJlZm9yZSA9IHByZWNpcGl0YXRpb24pXG5gYGAifQ== -->
+<pre class="r"><code>daily_weather_clean &lt;- daily_weather_trim %&gt;% 
+  # add quality col to note the days where (1) mean_temp &gt; max_temp 
+  # and (2) min_temp &gt; max_temp
+  mutate(temp_qual = case_when(
+    mean_temp &gt; max_temp &amp; min_temp &gt; max_temp ~ &quot;warning: max temp less than min temp and mean temp&quot;,
+    mean_temp &gt; max_temp ~ &quot;warning: max temp less than mean temp&quot;,
+    min_temp &gt; max_temp ~ &quot;warning: max temp less than min temp&quot;,
+    .default = NA_character_
+  )) %&gt;% 
+  # add var for snow yes/no
+  mutate(snow_tf = if_else(snow_depth &gt; 0, T, F), .before = snow_depth) %&gt;% 
+  # add var for precipitation yes/no
+  mutate(precipitation_tf = if_else(precipitation &gt; 0, T, F), .before = precipitation)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfd2VhdGhlcl9jbGVhbiAlPiUgXG4gIHN1bW1hcmlzZShjb3VudCA9IG4oKSwgLmJ5ID0gdGVtcF9xdWFsKVxuYGBgIn0= -->
+<pre class="r"><code>daily_weather_clean %&gt;% 
+  summarise(count = n(), .by = temp_qual)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-frame-begin eyJtZXRhZGF0YSI6eyJjbGFzc2VzIjpbInRibF9kZiIsInRibCIsImRhdGEuZnJhbWUiXSwibnJvdyI6MywibmNvbCI6Miwic3VtbWFyeSI6eyJBIHRpYmJsZSI6WyIzIMOXIDIiXX19LCJyZGYiOiJINHNJQUFBQUFBQUFBMzFRd1VyRU1CQ2RwcTNTd3E2Q1A1Q0x4L2FnSU9KWi9BQlIySnZFTnU0VzIwbE5VM2FQZnJSWGQ1MjB5YkxrWUNESjVPVzllVFB6L0xpNnpWYzVBTVNReEJIRUtZV1F2cjQ4RmZjQUNhTkhCQWxrOXQ0UjZZb0NDMTVPQ29Ec1FNc1JycmRDWTRQckI5NkpIVGV5NjNrcmg0R2JqVURlU1RvczVzZzMvNUtibWNzRjFpZEtnTVZzeTM1c0J0ckxvTVlVUlNjSFZ4OXpZR2JGYjEramFEMnJVaU9hUUpwcHRTMjkzUHF3Ynpxb3U5L1FvMnJGNEQwOG1OZkNpUEpEazU1ZSswQnlybnJUS0NRUnN3Tk1BM0drQStCaVJGdEpYVlNiRVQrTE8yc3dmYzlyNGVMNEpHYXpKVHU0VktsTGRTWngzYUQwdGJmaVhmb3hMS25qcWVHeTF3M053M1ZDNkZBYVpZN2p5aXZWZW1UcURmWi9ycXd5WlRjQ0FBQT0ifQ== -->
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["temp_qual"],"name":[1],"type":["chr"],"align":["left"]},{"label":["count"],"name":[2],"type":["int"],"align":["right"]}],"data":[{"1":"NA","2":"756"},{"1":"warning: max temp less than mean temp","2":"50"},{"1":"warning: max temp less than min temp and mean temp","2":"14"}],"options":{"columns":{"min":{},"max":[10],"total":[2]},"rows":{"min":[10],"max":[10],"total":[3]},"pages":{}}}
+  </script>
 </div>
-<div id="look-for-correlations" class="section level2">
-<h2>Look for correlations</h2>
+<!-- rnb-frame-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfd2VhdGhlcl9jbGVhbiAlPiUgXG4gIHNlbGVjdChzbm93X3RmLCBzbm93X2RlcHRoKSAlPiUgXG4gIHN1bW1hcmlzZShzbm93eV9kYXlzID0gbigpLCAuYnkgPSBzbm93X3RmKVxuYGBgIn0= -->
+<pre class="r"><code>daily_weather_clean %&gt;% 
+  select(snow_tf, snow_depth) %&gt;% 
+  summarise(snowy_days = n(), .by = snow_tf)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-frame-begin eyJtZXRhZGF0YSI6eyJjbGFzc2VzIjpbInRibF9kZiIsInRibCIsImRhdGEuZnJhbWUiXSwibnJvdyI6MiwibmNvbCI6Miwic3VtbWFyeSI6eyJBIHRpYmJsZSI6WyIyIMOXIDIiXX19LCJyZGYiOiJINHNJQUFBQUFBQUFBMTFReXc3Q0lCRGNQdENVcEdyaVg1aTBGeTkrZ1BFRGpDYmVETFpWR3l1WWdxbmUvSExyUXVFZ0Y1Z1pkbmFaM2E0UFMzcWdBQkJCSEFVUUVZUkE5cnROdGdLSVF5UUJ4SkRvKzRWRmN3UmFwUFlHVXdDUURqeGFERzkvUnNMWnZaSUlacVpvRU1lU2krNm96cFpTVGQvSGtyMmw1MDVhMGVXdWd4bnp3YVB2KzY4L3BtaVlkR09jU0V1bVdINXUwWS9NdDR6RlE5V0NveW5Vd1lobkRscFBtRDY1L2ttWkZkY252K2tObVVVRWRoR3B4ZUUvMWlQRDNyWWl0dFdvNHBlYVYrN3ZEVHRWalNVVFRHd0M1NCsyNXNvbFFWWG1TaWptNm1naEdxZVliUEQ5QVdlVEpEYlBBUUFBIn0= -->
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["snow_tf"],"name":[1],"type":["lgl"],"align":["right"]},{"label":["snowy_days"],"name":[2],"type":["int"],"align":["right"]}],"data":[{"1":"FALSE","2":"810"},{"1":"TRUE","2":"10"}],"options":{"columns":{"min":{},"max":[10],"total":[2]},"rows":{"min":[10],"max":[10],"total":[2]},"pages":{}}}
+  </script>
+</div>
+<!-- rnb-frame-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfd2VhdGhlcl9jbGVhbiAlPiUgXG4gIHN1bW1hcmlzZShyYWlueV9kYXlzID0gbigpLCAuYnkgPSBwcmVjaXBpdGF0aW9uX3RmKVxuYGBgIn0= -->
+<pre class="r"><code>daily_weather_clean %&gt;% 
+  summarise(rainy_days = n(), .by = precipitation_tf)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-frame-begin eyJtZXRhZGF0YSI6eyJjbGFzc2VzIjpbInRibF9kZiIsInRibCIsImRhdGEuZnJhbWUiXSwibnJvdyI6MiwibmNvbCI6Miwic3VtbWFyeSI6eyJBIHRpYmJsZSI6WyIyIMOXIDIiXX19LCJyZGYiOiJINHNJQUFBQUFBQUFBMTFRYldyRE1BeVZrM2lqaG8zQXpwRkEyWjhkWU93QVpZWCtLMXJpZG1hWkhSejM2OTlPdHFNMWt4TjdGQnRzUHozMDlDU3RYamZQWWlNQUlJY2laNUJ6Z3NEWDcyL1ZDMENSVWNDZ2dJWC96NVQwUk1DVEl2d001dk13eCt5WDdqRVJjbzNmY2lCUVRra3pXZlpXTnFwWERwMHlldXQyZ1JjV2xiNXNXN3dNU1ptRk5hYzZscHI4ZnVnWngvR2EralVkRHRFdmtxSkZoL1hPa3A2aVZISnZldDhHaVRJL0lVL0V6Q1pFZWRDK2s3WnFQZy82cTFvdXcwcHUxOEhDaW02dzk4ekdVSXVIV25kUzc1V1dzZmtPUDJRWGdrY2FlWnE0N3EzUzduOUY1alRVemppTWVhSXhYV1NtNGVENkI5RXlqNlhaQVFBQSJ9 -->
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["precipitation_tf"],"name":[1],"type":["lgl"],"align":["right"]},{"label":["rainy_days"],"name":[2],"type":["int"],"align":["right"]}],"data":[{"1":"TRUE","2":"446"},{"1":"FALSE","2":"374"}],"options":{"columns":{"min":{},"max":[10],"total":[2]},"rows":{"min":[10],"max":[10],"total":[2]},"pages":{}}}
+  </script>
+</div>
+<!-- rnb-frame-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Summary from these cleaning steps:</p>
+<p><strong>include in write-up</strong></p>
+<ul>
+<li>Data quality note: 64 dates where max temp &lt; mean temp, of which
+14 dates where max temp also less than min temp.</li>
+<li>10 days with snow, 810 days without</li>
+<li>446 days with precipitation, out of 820</li>
+</ul>
+</div>
+<div id="cleaning-steps-for-energy-data" class="section level3">
+<h3>[ ] Cleaning steps for energy data</h3>
+<p>In energy data prep:</p>
+<ul>
+<li>check for any NA_character_ &lt;– would have been created through my
+recoding steps</li>
+<li>assert kwh &gt;= 0 &amp; kwh &lt; 500 (reasonable upper limit
+cutoff)</li>
+<li>assert date &gt;= start_date &amp; &lt;= end_date (as
+specified)</li>
+</ul>
+</div>
+<div id="check-data-quality" class="section level3">
+<h3>check data quality</h3>
+<p>Assertions above pass, except for the following, for which add data
+quality cols to note these!</p>
+<ul>
+<li>64 days where max_temp &lt; mean_temp value</li>
+<li>14 days where min_temp &gt; max_temp</li>
+<li>1 day where min == max, but mean is larger</li>
+</ul>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfd2VhdGhlciAlPiUgXG4gIGZpbHRlcihtaW5fdGVtcCA9PSBtYXhfdGVtcClcbmBgYCJ9 -->
+<pre class="r"><code>daily_weather %&gt;% 
+  filter(min_temp == max_temp)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+</div>
+</div>
+</div>
+<div id="explore-correlations" class="section level1">
+<h1>Explore correlations</h1>
 <p>Use <code>daily_energy_weather</code> for cleaned households and
 <code>daily_energy_weather_all</code> to include all households
 (e.g. with lots of 0s, in case of solar panels)</p>
+<p><em>Note: ggpairs or pairs.panels not running right now</em></p>
+<div id="kwh-mean_temp" class="section level2">
+<h2>kwh ~ mean_temp</h2>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfZW5lcmd5X3dlYXRoZXJfYWxsICU+JSBcbiAgZ2dwbG90KCkgK1xuICBnZW9tX3BvaW50KGFlcyh4ID0gbWVhbl90ZW1wLCB5ID0ga3doKSlcbmBgYCJ9 -->
+<pre class="r"><code>daily_energy_weather_all %&gt;% 
+  ggplot() +
+  geom_point(aes(x = mean_temp, y = kwh))</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>There are points with much higher usages as lower temperatures - are
+they the same household?</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfZW5lcmd5X3dlYXRoZXJfYWxsICU+JSBcbiAgZmlsdGVyKGt3aCA+IDE1MCkgJT4lIFxuICBnZ3Bsb3QoKSArXG4gIGdlb21fcG9pbnQoYWVzKHggPSBtZWFuX3RlbXAsIHkgPSBrd2gsIGNvbG91ciA9IGxjX2xpZCkpXG5gYGAifQ== -->
+<pre class="r"><code>daily_energy_weather_all %&gt;% 
+  filter(kwh &gt; 150) %&gt;% 
+  ggplot() +
+  geom_point(aes(x = mean_temp, y = kwh, colour = lc_lid))</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>They are not the same households, but are only a small number (22) of
+the 5,500 total (note: this is the uncleaned dataset)</p>
+<p>Check also with the cleaned dataset</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfZW5lcmd5X3dlYXRoZXIgJT4lIFxuICBnZ3Bsb3QoKSArXG4gIGdlb21fcG9pbnQoYWVzKHggPSBtZWFuX3RlbXAsIHkgPSBrd2gpKVxuYGBgIn0= -->
+<pre class="r"><code>daily_energy_weather %&gt;% 
+  ggplot() +
+  geom_point(aes(x = mean_temp, y = kwh))</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfZW5lcmd5X3dlYXRoZXIgJT4lIFxuICBmaWx0ZXIoa3doID4gMTUwKSAlPiUgXG4gIGdncGxvdCgpICtcbiAgZ2VvbV9wb2ludChhZXMoeCA9IG1lYW5fdGVtcCwgeSA9IGt3aCwgY29sb3VyID0gbGNfbGlkKSlcbmBgYCJ9 -->
+<pre class="r"><code>daily_energy_weather %&gt;% 
+  filter(kwh &gt; 150) %&gt;% 
+  ggplot() +
+  geom_point(aes(x = mean_temp, y = kwh, colour = lc_lid))</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>We’ve only lost on household from the cleaning step</p>
+</div>
+<div id="kwh-sunshine" class="section level2">
+<h2>kwh ~ sunshine</h2>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfZW5lcmd5X3dlYXRoZXJfYWxsICU+JSBcbiAgZ2dwbG90KCkgK1xuICBnZW9tX3BvaW50KGFlcyh4ID0gc3Vuc2hpbmUsIHkgPSBrd2gpKVxuYGBgIn0= -->
+<pre class="r"><code>daily_energy_weather_all %&gt;% 
+  ggplot() +
+  geom_point(aes(x = sunshine, y = kwh))</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>General trend of lower kWh as number of sunshine hours increases</p>
+<p>Some households with much higher use (&gt;150 kwh) when sunshine less
+(&lt;8 hours) – remember sunshine hours might be factor of season</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfZW5lcmd5X3dlYXRoZXJfYWxsICU+JSBcbiAgZmlsdGVyKGt3aCA+IDE1MCkgJT4lIFxuICBnZ3Bsb3QoKSArXG4gIGdlb21fcG9pbnQoYWVzKHggPSBzdW5zaGluZSwgeSA9IGt3aCwgY29sb3VyID0gbGNfbGlkKSlcbmBgYCJ9 -->
+<pre class="r"><code>daily_energy_weather_all %&gt;% 
+  filter(kwh &gt; 150) %&gt;% 
+  ggplot() +
+  geom_point(aes(x = sunshine, y = kwh, colour = lc_lid))</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+</div>
+<div id="kwh-radiation" class="section level2">
+<h2>kwh ~ radiation</h2>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfZW5lcmd5X3dlYXRoZXJfYWxsICU+JSBcbiAgZ2dwbG90KCkgK1xuICBnZW9tX3BvaW50KGFlcyh4ID0gZ2xvYmFsX3JhZGlhdGlvbiwgeSA9IGt3aCkpXG5gYGAifQ== -->
+<pre class="r"><code>daily_energy_weather_all %&gt;% 
+  ggplot() +
+  geom_point(aes(x = global_radiation, y = kwh))</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Same pattern… high use on low radiation days</p>
+<p>Find any middle users who drop to zero at high radiation (consider
+solar panels)?</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfZW5lcmd5X3dlYXRoZXJfYWxsICU+JSBcbiAgZmlsdGVyKGt3aCA+IDE1MCkgJT4lIFxuICBnZ3Bsb3QoKSArXG4gIGdlb21fcG9pbnQoYWVzKHggPSBnbG9iYWxfcmFkaWF0aW9uLCB5ID0ga3doLCBjb2xvdXIgPSBsY19saWQpKVxuYGBgIn0= -->
+<pre class="r"><code>daily_energy_weather_all %&gt;% 
+  filter(kwh &gt; 150) %&gt;% 
+  ggplot() +
+  geom_point(aes(x = global_radiation, y = kwh, colour = lc_lid))</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+</div>
+<div id="kwh-precipitation" class="section level2">
+<h2>kwh ~ precipitation</h2>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfZW5lcmd5X3dlYXRoZXJfYWxsICU+JSBcbiAgZ2dwbG90KCkgK1xuICBnZW9tX3BvaW50KGFlcyh4ID0gcHJlY2lwaXRhdGlvbiwgeSA9IGt3aCkpXG5gYGAifQ== -->
+<pre class="r"><code>daily_energy_weather_all %&gt;% 
+  ggplot() +
+  geom_point(aes(x = precipitation, y = kwh))</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Most days have low precipitation, some high values on these days. No
+obvious pattern for energy usage at higher precipitation.</p>
+<p>Suggest dropping precipitation.</p>
+</div>
+<div id="kwh-snow_depth" class="section level2">
+<h2>kwh ~ snow_depth</h2>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfZW5lcmd5X3dlYXRoZXJfYWxsICU+JSBcbiAgZ2dwbG90KCkgK1xuICBnZW9tX3BvaW50KGFlcyh4ID0gc25vd19kZXB0aCwgeSA9IGt3aCkpXG5gYGAifQ== -->
+<pre class="r"><code>daily_energy_weather_all %&gt;% 
+  ggplot() +
+  geom_point(aes(x = snow_depth, y = kwh))</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Most days have no snow… filter for &gt; 0</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfZW5lcmd5X3dlYXRoZXJfYWxsICU+JSBcbiAgZmlsdGVyKHNub3dfZGVwdGggPiAwKSAlPiUgXG4gIG11dGF0ZShzbm93X2RlcHRoID0gZmFjdG9yKHNub3dfZGVwdGgpKSAlPiUgXG4gIGdncGxvdCgpICtcbiAgZ2VvbV9ib3hwbG90KGFlcyh4ID0gc25vd19kZXB0aCwgeSA9IGt3aCkpXG5gYGAifQ== -->
+<pre class="r"><code>daily_energy_weather_all %&gt;% 
+  filter(snow_depth &gt; 0) %&gt;% 
+  mutate(snow_depth = factor(snow_depth)) %&gt;% 
+  ggplot() +
+  geom_boxplot(aes(x = snow_depth, y = kwh))</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>No correlation here, drop snow_depth</p>
+<p>Look at snow yes/no:</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfZW5lcmd5X3dlYXRoZXJfYWxsICU+JSBcbiAgbXV0YXRlKHNub3cgPSBpZl9lbHNlKHNub3dfZGVwdGggPT0gMCwgRiwgVCkpICU+JSBcbiAgZ2dwbG90KCkgK1xuICBnZW9tX2JveHBsb3QoYWVzKHggPSBzbm93LCB5ID0ga3doKSlcbiMgbm90ZSB0aGlzIGRvZXMgbm90IGFjY291bnQgZm9yIHdpdGhpbi1ob3VzZWhvbGQgcmVsYXRpb25zaGlwIVxuYGBgIn0= -->
+<pre class="r"><code>daily_energy_weather_all %&gt;% 
+  mutate(snow = if_else(snow_depth == 0, F, T)) %&gt;% 
+  ggplot() +
+  geom_boxplot(aes(x = snow, y = kwh))
+# note this does not account for within-household relationship!</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Would need to look at kWh change based on snow yes/no</p>
+</div>
+<div id="kwh-pressure" class="section level2">
+<h2>kwh ~ pressure</h2>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfZW5lcmd5X3dlYXRoZXJfYWxsICU+JSBcbiAgZ2dwbG90KCkgK1xuICBnZW9tX3BvaW50KGFlcyh4ID0gcHJlc3N1cmUsIHkgPSBrd2gpKVxuYGBgIn0= -->
+<pre class="r"><code>daily_energy_weather_all %&gt;% 
+  ggplot() +
+  geom_point(aes(x = pressure, y = kwh))</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>No discernible neg/pos correlation with kWh here, suggest dropping
+pressure</p>
+</div>
+<div id="kwh-cloud_cover" class="section level2">
+<h2>kwh ~ cloud_cover</h2>
+<p>Note cloud cover is not continuous numeric, it’s a scale system, make
+it a factor…</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfZW5lcmd5X3dlYXRoZXJfYWxsICU+JSBcbiAgbXV0YXRlKGNsb3VkX2NvdmVyID0gZmFjdG9yKGNsb3VkX2NvdmVyKSkgJT4lIFxuICBnZ3Bsb3QoKSArXG4gIGdlb21fYm94cGxvdChhZXMoeCA9IGNsb3VkX2NvdmVyLCB5ID0ga3doKSlcbmBgYCJ9 -->
+<pre class="r"><code>daily_energy_weather_all %&gt;% 
+  mutate(cloud_cover = factor(cloud_cover)) %&gt;% 
+  ggplot() +
+  geom_boxplot(aes(x = cloud_cover, y = kwh))</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>No discerinble pattern here</p>
+</div>
+<div id="kwh-min_temp" class="section level2">
+<h2>kwh ~ min_temp</h2>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfZW5lcmd5X3dlYXRoZXJfYWxsICU+JSBcbiAgZ2dwbG90KCkgK1xuICBnZW9tX3BvaW50KGFlcyh4ID0gbWluX3RlbXAsIHkgPSBrd2gpKVxuYGBgIn0= -->
+<pre class="r"><code>daily_energy_weather_all %&gt;% 
+  ggplot() +
+  geom_point(aes(x = min_temp, y = kwh))</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Similar pattern to mean_temp</p>
+</div>
+<div id="kwh-max_temp" class="section level2">
+<h2>kwh ~ max_temp</h2>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfZW5lcmd5X3dlYXRoZXJfYWxsICU+JSBcbiAgZ2dwbG90KCkgK1xuICBnZW9tX3BvaW50KGFlcyh4ID0gbWF4X3RlbXAsIHkgPSBrd2gpKVxuYGBgIn0= -->
+<pre class="r"><code>daily_energy_weather_all %&gt;% 
+  ggplot() +
+  geom_point(aes(x = max_temp, y = kwh))</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Again similar pattern to mean_temp</p>
+</div>
+</div>
+<div id="understand-weather-and-month-correlations" class="section level1">
+<h1>understand weather and month correlations</h1>
+<p>e.g. sunshine hours, radiation, mean_temp</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfd2VhdGhlciAlPiUgXG4gIGdncGxvdChhZXMoeCA9IHN1bnNoaW5lLCB5ID0gbWVhbl90ZW1wKSkgK1xuICBnZW9tX3BvaW50KCkgK1xuICBnZW9tX3Ntb290aCgpXG5gYGAifQ== -->
+<pre class="r"><code>daily_weather %&gt;% 
+  ggplot(aes(x = sunshine, y = mean_temp)) +
+  geom_point() +
+  geom_smooth()</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Default line of best fit is not straight, but typically as sunshine
+hours increase, mean_temp increases</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfd2VhdGhlciAlPiUgXG4gIGdncGxvdChhZXMoeCA9IHN1bnNoaW5lLCB5ID0gbWVhbl90ZW1wKSkgK1xuICBnZW9tX3BvaW50KCkgK1xuICBnZW9tX3Ntb290aChtZXRob2QgPSBsbSlcbmBgYCJ9 -->
+<pre class="r"><code>daily_weather %&gt;% 
+  ggplot(aes(x = sunshine, y = mean_temp)) +
+  geom_point() +
+  geom_smooth(method = lm)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Clearly a positive correlation here, so take care with using
+mean_temp and sunshine hours</p>
+<p>Why are there values with 0 sunshine hours? Look at cloud cover…</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfd2VhdGhlciAlPiUgXG4gIGdncGxvdChhZXMoeSA9IHN1bnNoaW5lLCB4ID0gY2xvdWRfY292ZXIpKSArXG4gIGdlb21fcG9pbnQoKVxuYGBgIn0= -->
+<pre class="r"><code>daily_weather %&gt;% 
+  ggplot(aes(y = sunshine, x = cloud_cover)) +
+  geom_point()</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>There are low numbers of sunshine hours as cloud cover gets high –
+suggests the sunshine hours value is more to do with direct sunshine
+rather than daylight.</p>
+<p>Check sunshine hours v radiation radiation v cloud_cover too</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfd2VhdGhlciAlPiUgXG4gIGdncGxvdChhZXMoeCA9IHN1bnNoaW5lLCB5ID0gZ2xvYmFsX3JhZGlhdGlvbikpICtcbiAgZ2VvbV9wb2ludCgpICtcbiAgZ2VvbV9zbW9vdGgoKVxuYGBgIn0= -->
+<pre class="r"><code>daily_weather %&gt;% 
+  ggplot(aes(x = sunshine, y = global_radiation)) +
+  geom_point() +
+  geom_smooth()</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Very clear positive correlation here, more sunshine hours = higher
+radiation</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfd2VhdGhlciAlPiUgXG4gIGdncGxvdChhZXMoeSA9IGdsb2JhbF9yYWRpYXRpb24sIHggPSBjbG91ZF9jb3ZlcikpICtcbiAgZ2VvbV9wb2ludCgpXG5gYGAifQ== -->
+<pre class="r"><code>daily_weather %&gt;% 
+  ggplot(aes(y = global_radiation, x = cloud_cover)) +
+  geom_point()</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<div id="time-energy" class="section level2">
+<h2>time ~ energy</h2>
+<div id="month-energy" class="section level3">
+<h3>month ~ energy</h3>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfZW5lcmd5X3dlYXRoZXIgJT4lIFxuICBnZ3Bsb3QoYWVzKHggPSBtb250aCwgeSA9IGt3aCkpICtcbiAgZ2VvbV9ib3hwbG90KClcblxuZGFpbHlfZW5lcmd5X3dlYXRoZXJfYWxsICU+JSBcbiAgZ2dwbG90KGFlcyh4ID0gbW9udGgsIHkgPSBrd2gpKSArXG4gIGdlb21fYm94cGxvdCgpXG5gYGAifQ== -->
+<pre class="r"><code>daily_energy_weather %&gt;% 
+  ggplot(aes(x = month, y = kwh)) +
+  geom_boxplot()
+
+daily_energy_weather_all %&gt;% 
+  ggplot(aes(x = month, y = kwh)) +
+  geom_boxplot()</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>(Note cleaned only has slight difference to all households)</p>
+<p>Very long tail in Q3-Q4 range, making it harder to see medians – but
+note energy is higher in Nov-Mar, lower in May - Aug.</p>
+</div>
+<div id="season-energy" class="section level3">
+<h3>season ~ energy</h3>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfZW5lcmd5X3dlYXRoZXIgJT4lIFxuICBnZ3Bsb3QoYWVzKHggPSBzZWFzb24sIHkgPSBrd2gpKSArXG4gIGdlb21fYm94cGxvdCgpXG5cbmRhaWx5X2VuZXJneV93ZWF0aGVyX2FsbCAlPiUgXG4gIGdncGxvdChhZXMoeCA9IHNlYXNvbiwgeSA9IGt3aCkpICtcbiAgZ2VvbV9ib3hwbG90KClcbmBgYCJ9 -->
+<pre class="r"><code>daily_energy_weather %&gt;% 
+  ggplot(aes(x = season, y = kwh)) +
+  geom_boxplot()
+
+daily_energy_weather_all %&gt;% 
+  ggplot(aes(x = season, y = kwh)) +
+  geom_boxplot()</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Does look like summer/winter effect, winter higher energy spend
+(spring/fall between the two)</p>
+</div>
+<div id="weekday-type-energy" class="section level3">
+<h3>weekday type ~ energy</h3>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfZW5lcmd5X3dlYXRoZXIgJT4lIFxuICBnZ3Bsb3QoYWVzKHggPSB3ZWVrZW5kLCB5ID0ga3doKSkgK1xuICBnZW9tX2JveHBsb3QoKVxuXG5kYWlseV9lbmVyZ3lfd2VhdGhlcl9hbGwgJT4lIFxuICBnZ3Bsb3QoYWVzKHggPSB3ZWVrZW5kLCB5ID0ga3doKSkgK1xuICBnZW9tX2JveHBsb3QoKVxuYGBgIn0= -->
+<pre class="r"><code>daily_energy_weather %&gt;% 
+  ggplot(aes(x = weekend, y = kwh)) +
+  geom_boxplot()
+
+daily_energy_weather_all %&gt;% 
+  ggplot(aes(x = weekend, y = kwh)) +
+  geom_boxplot()</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Hard to discern a difference here, look with season too</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfZW5lcmd5X3dlYXRoZXIgJT4lIFxuICBmaWx0ZXIoc2Vhc29uICE9IFwiU3ByaW5nL0F1dHVtblwiKSAlPiUgXG4gIGdncGxvdChhZXMoeCA9IHdlZWtlbmQsIHkgPSBrd2gpKSArXG4gIGdlb21fYm94cGxvdCgpICtcbmZhY2V0X3dyYXAofiBzZWFzb24pXG5cbmRhaWx5X2VuZXJneV93ZWF0aGVyX2FsbCAlPiUgXG4gIGdncGxvdChhZXMoeCA9IHdlZWtlbmQsIHkgPSBrd2gpKSArXG4gIGdlb21fYm94cGxvdCgpICtcbmZhY2V0X3dyYXAofiBzZWFzb24pXG5gYGAifQ== -->
+<pre class="r"><code>daily_energy_weather %&gt;% 
+  filter(season != &quot;Spring/Autumn&quot;) %&gt;% 
+  ggplot(aes(x = weekend, y = kwh)) +
+  geom_boxplot() +
+facet_wrap(~ season)
+
+daily_energy_weather_all %&gt;% 
+  ggplot(aes(x = weekend, y = kwh)) +
+  geom_boxplot() +
+facet_wrap(~ season)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfZW5lcmd5X3dlYXRoZXIgJT4lIFxuICBmaWx0ZXIoa3doIDwgMTAwKSAlPiUgIyB6b29tIGluXG4gIGdncGxvdCgpICtcbiAgZ2VvbV9oaXN0b2dyYW0oYWVzKHggPSBrd2gpLCBiaW5zID0gMTAwKSArXG5mYWNldF93cmFwKHdlZWtlbmQgfiBzZWFzb24sIG5jb2wgPSAzKVxuYGBgIn0= -->
+<pre class="r"><code>daily_energy_weather %&gt;% 
+  filter(kwh &lt; 100) %&gt;% # zoom in
+  ggplot() +
+  geom_histogram(aes(x = kwh), bins = 100) +
+facet_wrap(weekend ~ season, ncol = 3)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Seasonal decomposition suggest levels were higher on the weekend
+days. I’m not convinced there is a weekend effect here! At least, cannot
+see it as global effect. Still worth exploring if there is this for
+individual households.</p>
+</div>
+</div>
+<div id="time-x-weather" class="section level2">
+<h2>time x weather</h2>
+<div id="month-weather" class="section level3">
+<h3>month ~ weather</h3>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBzYW1lIHRpbWUgZm9ybWF0IGNoYW5nZXMgYXMgaW4gdGhlIHByb2Nlc3NlZCBob3VzZWhvbGQgZW5lcmd5IGRhdGEgKHNlZSBzY3JpcHQpXG4jIHVzZSB3ZWF0aGVyIG9ubHkgZGYgaGVyZSB0byBoYXZlIG9uZSByb3cgcGVyIGRheSwgbm8gcmVwZWF0cyBmb3IgZGlmZiBob3VzZWhvbGRzXG5kYWlseV93ZWF0aGVyIDwtIGRhaWx5X3dlYXRoZXIgJT4lIFxuICBtdXRhdGUobW9udGggPSBtb250aChkYXRlLCBsYWJlbCA9IFRSVUUpLCAuYWZ0ZXIgPSBkYXRlKSAlPiUgXG4gIG11dGF0ZSh3ZGF5ID0gd2RheShkYXRlLCBsYWJlbCA9IFRSVUUpLCAuYWZ0ZXIgPSBtb250aCkgJT4lIFxuICBtdXRhdGUod2Vla2VuZCA9IGlmX2Vsc2Uod2RheSAlaW4lIGMoXCJTYXRcIiwgXCJTdW5cIiksIFQsIEYpLCAuYWZ0ZXIgPSB3ZGF5KSAlPiUgXG4gIG11dGF0ZShxdWFydGVyID0gcXVhcnRlcihkYXRlLCB0eXBlID0gXCJkYXRlX2ZpcnN0XCIsIGZpc2NhbF9zdGFydCA9IDEyKSwgLmFmdGVyID0gbW9udGgpICU+JSBcbiAgbXV0YXRlKHllYXJzZWFzb24gPSBjYXNlX3doZW4oXG4gICAgcXVhcnRlciA9PSBcIjIwMTEtMDktMDFcIiB+IFwiQXV0dW1uIDIwMTFcIixcbiAgICBxdWFydGVyID09IFwiMjAxMS0xMi0wMVwiIH4gXCJXaW50ZXIgMjAxMVwiLFxuICAgIHF1YXJ0ZXIgPT0gXCIyMDEyLTAzLTAxXCIgfiBcIlNwcmluZyAyMDEyXCIsXG4gICAgcXVhcnRlciA9PSBcIjIwMTItMDYtMDFcIiB+IFwiU3VtbWVyIDIwMTJcIixcbiAgICBxdWFydGVyID09IFwiMjAxMi0wOS0wMVwiIH4gXCJBdXR1bW4gMjAxMlwiLFxuICAgIHF1YXJ0ZXIgPT0gXCIyMDEyLTEyLTAxXCIgfiBcIldpbnRlciAyMDEyXCIsXG4gICAgcXVhcnRlciA9PSBcIjIwMTMtMDMtMDFcIiB+IFwiU3ByaW5nIDIwMTNcIixcbiAgICBxdWFydGVyID09IFwiMjAxMy0wNi0wMVwiIH4gXCJTdW1tZXIgMjAxM1wiLFxuICAgIHF1YXJ0ZXIgPT0gXCIyMDEzLTA5LTAxXCIgfiBcIkF1dHVtbiAyMDEzXCIsXG4gICAgcXVhcnRlciA9PSBcIjIwMTMtMTItMDFcIiB+IFwiV2ludGVyIDIwMTNcIixcbiAgICAuZGVmYXVsdCA9IE5BX2NoYXJhY3Rlcl9cbiAgKSwgLmFmdGVyID0gcXVhcnRlcikgJT4lIFxuICBtdXRhdGUoeWVhcnNlYXNvbiA9IGZhY3Rvcih5ZWFyc2Vhc29uLCBsZXZlbHMgPSBjKFxuICAgIFwiQXV0dW1uIDIwMTFcIiwgXCJXaW50ZXIgMjAxMVwiLCBcIlNwcmluZyAyMDEyXCIsIFwiU3VtbWVyIDIwMTJcIixcbiAgICBcIkF1dHVtbiAyMDEyXCIsIFwiV2ludGVyIDIwMTJcIiwgXCJTcHJpbmcgMjAxM1wiLCBcIlN1bW1lciAyMDEzXCIsXG4gICAgXCJBdXR1bW4gMjAxM1wiLCBcIldpbnRlciAyMDEzXCJcbiAgICApKSkgJT4lIFxuICBtdXRhdGUoc2Vhc29uID0gY2FzZV93aGVuKFxuICAgIHN0cl9kZXRlY3QoeWVhcnNlYXNvbiwgXCJXaW50ZXJcIikgfiBcIldpbnRlclwiLFxuICAgIHN0cl9kZXRlY3QoeWVhcnNlYXNvbiwgXCJTdW1tZXJcIikgfiBcIlN1bW1lclwiLFxuICAgIHN0cl9kZXRlY3QoeWVhcnNlYXNvbiwgXCJTcHJpbmd8QXV0dW1uXCIpIH4gXCJTcHJpbmcvQXV0dW1uXCIsXG4gICAgLmRlZmF1bHQgPSBOQV9jaGFyYWN0ZXJfXG4gICksIC5hZnRlciA9IG1vbnRoKVxuXG5kYWlseV93ZWF0aGVyXG5gYGAifQ== -->
+<pre class="r"><code># same time format changes as in the processed household energy data (see script)
+# use weather only df here to have one row per day, no repeats for diff households
+daily_weather &lt;- daily_weather %&gt;% 
+  mutate(month = month(date, label = TRUE), .after = date) %&gt;% 
+  mutate(wday = wday(date, label = TRUE), .after = month) %&gt;% 
+  mutate(weekend = if_else(wday %in% c(&quot;Sat&quot;, &quot;Sun&quot;), T, F), .after = wday) %&gt;% 
+  mutate(quarter = quarter(date, type = &quot;date_first&quot;, fiscal_start = 12), .after = month) %&gt;% 
+  mutate(yearseason = case_when(
+    quarter == &quot;2011-09-01&quot; ~ &quot;Autumn 2011&quot;,
+    quarter == &quot;2011-12-01&quot; ~ &quot;Winter 2011&quot;,
+    quarter == &quot;2012-03-01&quot; ~ &quot;Spring 2012&quot;,
+    quarter == &quot;2012-06-01&quot; ~ &quot;Summer 2012&quot;,
+    quarter == &quot;2012-09-01&quot; ~ &quot;Autumn 2012&quot;,
+    quarter == &quot;2012-12-01&quot; ~ &quot;Winter 2012&quot;,
+    quarter == &quot;2013-03-01&quot; ~ &quot;Spring 2013&quot;,
+    quarter == &quot;2013-06-01&quot; ~ &quot;Summer 2013&quot;,
+    quarter == &quot;2013-09-01&quot; ~ &quot;Autumn 2013&quot;,
+    quarter == &quot;2013-12-01&quot; ~ &quot;Winter 2013&quot;,
+    .default = NA_character_
+  ), .after = quarter) %&gt;% 
+  mutate(yearseason = factor(yearseason, levels = c(
+    &quot;Autumn 2011&quot;, &quot;Winter 2011&quot;, &quot;Spring 2012&quot;, &quot;Summer 2012&quot;,
+    &quot;Autumn 2012&quot;, &quot;Winter 2012&quot;, &quot;Spring 2013&quot;, &quot;Summer 2013&quot;,
+    &quot;Autumn 2013&quot;, &quot;Winter 2013&quot;
+    ))) %&gt;% 
+  mutate(season = case_when(
+    str_detect(yearseason, &quot;Winter&quot;) ~ &quot;Winter&quot;,
+    str_detect(yearseason, &quot;Summer&quot;) ~ &quot;Summer&quot;,
+    str_detect(yearseason, &quot;Spring|Autumn&quot;) ~ &quot;Spring/Autumn&quot;,
+    .default = NA_character_
+  ), .after = month)
+
+daily_weather</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfd2VhdGhlciAlPiUgXG4gIGdncGxvdChhZXMoeCA9IG1vbnRoLCB5ID0gbWVhbl90ZW1wKSkgK1xuICBnZW9tX2JveHBsb3QoKVxuYGBgIn0= -->
+<pre class="r"><code>daily_weather %&gt;% 
+  ggplot(aes(x = month, y = mean_temp)) +
+  geom_boxplot()</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>So mean temperature is a factor of month, higher temps in summer,
+lower in winter.</p>
+<p>Could use January and July or Dec-Feb and June - Aug as set time
+periods to look at individually</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBzdW5zaGluZVxuZGFpbHlfd2VhdGhlciAlPiUgXG4gIGdncGxvdChhZXMoeCA9IG1vbnRoLCB5ID0gc3Vuc2hpbmUpKSArXG4gIGdlb21fYm94cGxvdCgpXG5gYGAifQ== -->
+<pre class="r"><code># sunshine
+daily_weather %&gt;% 
+  ggplot(aes(x = month, y = sunshine)) +
+  geom_boxplot()</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Sunshine relationship is less clearly by month - although lower in
+Dec/Jan, highest in July</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfd2VhdGhlciAlPiUgXG4gIGdncGxvdChhZXMoeCA9IG1vbnRoLCB5ID0gZ2xvYmFsX3JhZGlhdGlvbikpICtcbiAgZ2VvbV9ib3hwbG90KClcbmBgYCJ9 -->
+<pre class="r"><code>daily_weather %&gt;% 
+  ggplot(aes(x = month, y = global_radiation)) +
+  geom_boxplot()</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Radiation is a factor of month too, similar to temp</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfd2VhdGhlciAlPiUgXG4gIGdncGxvdChhZXMoeCA9IG1vbnRoLCB5ID0gY2xvdWRfY292ZXIpKSArXG4gIGdlb21fYm94cGxvdCgpXG5gYGAifQ== -->
+<pre class="r"><code>daily_weather %&gt;% 
+  ggplot(aes(x = month, y = cloud_cover)) +
+  geom_boxplot()</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Less a seasonal pattern, note cloud cover looks lowest in
+July/Aug/Sept</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfd2VhdGhlciAlPiUgXG4gIGZpbHRlcihzbm93X2RlcHRoID4gMCkgJT4lIFxuICBnZ3Bsb3QoYWVzKHggPSBtb250aCwgeSA9IHNub3dfZGVwdGgpKSArXG4gIGdlb21fYm94cGxvdCgpXG5gYGAifQ== -->
+<pre class="r"><code>daily_weather %&gt;% 
+  filter(snow_depth &gt; 0) %&gt;% 
+  ggplot(aes(x = month, y = snow_depth)) +
+  geom_boxplot()</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Only Jan and Feb have any snow, maybe more snow in Jan than Feb</p>
+<p>Only useful to look at snow_Depth ~ kwh in Jan/Feb months - but even
+filtering for only days with some snow –&gt; no correlations with kWh
+(se bloxplots above)</p>
+</div>
+<div id="season-weather" class="section level3">
+<h3>season ~ weather</h3>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfd2VhdGhlciAlPiUgXG4gIGdncGxvdChhZXMoeCA9IHllYXJzZWFzb24sIHkgPSBtZWFuX3RlbXApKSArXG4gIGdlb21fYm94cGxvdCgpICtcbiAgdGhlbWUoYXhpcy50ZXh0ID0gZWxlbWVudF90ZXh0KGFuZ2xlID0gNDUpKVxuYGBgIn0= -->
+<pre class="r"><code>daily_weather %&gt;% 
+  ggplot(aes(x = yearseason, y = mean_temp)) +
+  geom_boxplot() +
+  theme(axis.text = element_text(angle = 45))</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfd2VhdGhlciAlPiUgXG4gIGdncGxvdChhZXMoeCA9IHNlYXNvbiwgeSA9IG1lYW5fdGVtcCkpICtcbiAgZ2VvbV9ib3hwbG90KClcbmBgYCJ9 -->
+<pre class="r"><code>daily_weather %&gt;% 
+  ggplot(aes(x = season, y = mean_temp)) +
+  geom_boxplot()</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Clear seasonal variation in temperature</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfd2VhdGhlciAlPiUgXG4gIGdncGxvdChhZXMoeCA9IHllYXJzZWFzb24sIHkgPSBjbG91ZF9jb3ZlcikpICtcbiAgZ2VvbV9ib3hwbG90KCkgK1xuICB0aGVtZShheGlzLnRleHQgPSBlbGVtZW50X3RleHQoYW5nbGUgPSA0NSkpXG5gYGAifQ== -->
+<pre class="r"><code>daily_weather %&gt;% 
+  ggplot(aes(x = yearseason, y = cloud_cover)) +
+  geom_boxplot() +
+  theme(axis.text = element_text(angle = 45))</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Less obvious differences, see lowest cloud_cover in Summer 2013</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfd2VhdGhlciAlPiUgXG4gIGdncGxvdChhZXMoeCA9IHllYXJzZWFzb24sIHkgPSBzdW5zaGluZSkpICtcbiAgZ2VvbV9ib3hwbG90KCkgK1xuICB0aGVtZShheGlzLnRleHQgPSBlbGVtZW50X3RleHQoYW5nbGUgPSA0NSkpXG5gYGAifQ== -->
+<pre class="r"><code>daily_weather %&gt;% 
+  ggplot(aes(x = yearseason, y = sunshine)) +
+  geom_boxplot() +
+  theme(axis.text = element_text(angle = 45))</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Generally higher in summer, lower in winter, but variable (eg spring
+2012 == summer 2012, Winter 2012 particularly low)</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfd2VhdGhlciAlPiUgXG4gIGdncGxvdChhZXMoeCA9IHllYXJzZWFzb24sIHkgPSBnbG9iYWxfcmFkaWF0aW9uKSkgK1xuICBnZW9tX2JveHBsb3QoKSArXG4gIHRoZW1lKGF4aXMudGV4dCA9IGVsZW1lbnRfdGV4dChhbmdsZSA9IDQ1KSlcbmBgYCJ9 -->
+<pre class="r"><code>daily_weather %&gt;% 
+  ggplot(aes(x = yearseason, y = global_radiation)) +
+  geom_boxplot() +
+  theme(axis.text = element_text(angle = 45))</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Very clear seasonal variation in radiation, higher in spring/summer,
+lower in autumn/winter</p>
+<p>Summary of seasonal effects:</p>
+<ul>
+<li>temperature - yes, very clear, summer high, winter low</li>
+<li>cloud_cover - not clearly, but dip in summer 2013</li>
+<li>sunshine - yes, but varies year on year</li>
+<li>global_radiation - yes, very clear, spring/summer high,
+autumn/winter low</li>
+</ul>
+</div>
+<div id="weekday-type-weather" class="section level3">
+<h3>weekday type ~ weather</h3>
+<p>Assume it’s not related</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfd2VhdGhlciAlPiUgXG4gIGdncGxvdChhZXMoeCA9IHdlZWtlbmQsIHkgPSBtZWFuX3RlbXApKSArXG4gIGdlb21fYm94cGxvdCgpXG5gYGAifQ== -->
+<pre class="r"><code>daily_weather %&gt;% 
+  ggplot(aes(x = weekend, y = mean_temp)) +
+  geom_boxplot()</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfd2VhdGhlciAlPiUgXG4gIGdncGxvdChhZXMoeCA9IHdlZWtlbmQsIHkgPSBnbG9iYWxfcmFkaWF0aW9uKSkgK1xuICBnZW9tX2JveHBsb3QoKVxuYGBgIn0= -->
+<pre class="r"><code>daily_weather %&gt;% 
+  ggplot(aes(x = weekend, y = global_radiation)) +
+  geom_boxplot()</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfd2VhdGhlciAlPiUgXG4gIGdncGxvdChhZXMoeCA9IHdlZWtlbmQsIHkgPSBzdW5zaGluZSkpICtcbiAgZ2VvbV9ib3hwbG90KClcbmBgYCJ9 -->
+<pre class="r"><code>daily_weather %&gt;% 
+  ggplot(aes(x = weekend, y = sunshine)) +
+  geom_boxplot()</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFpbHlfd2VhdGhlciAlPiUgXG4gIGdncGxvdChhZXMoeCA9IHdlZWtlbmQsIHkgPSBjbG91ZF9jb3ZlcikpICtcbiAgZ2VvbV9ib3hwbG90KClcbmBgYCJ9 -->
+<pre class="r"><code>daily_weather %&gt;% 
+  ggplot(aes(x = weekend, y = cloud_cover)) +
+  geom_boxplot()</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Clearly no relationship between weather and weekday type (weekend or
+not).</p>
+</div>
+</div>
+<div id="summary-of-predictors-to-consider" class="section level2">
+<h2>summary of predictors to consider</h2>
+<p>Weather values to consider:</p>
+<ul>
+<li>temp (use mean, drop min/max)</li>
+<li>sunshine hours (use instead of radiation or cloud_cover (aliases);
+check corr with month too and beware)</li>
+</ul>
+<p>Drop pressure, precipitation</p>
+<p>Note lots of factors are inter-related, these are <strong>not
+independent variables</strong>.</p>
+<p>Potential aliases with date / month / season:</p>
+<ul>
+<li>temperature and radiation - clear seasonal pattern,
+month-by-month</li>
+<li>maybe sunshine - but less distinct</li>
+<li>cloud_cover lowest in Jul/Aug - less of a transitional pattern
+though</li>
+<li>snow only happens in Jan/Feb</li>
+</ul>
+<p>Use these as descriptive elements about energy use - only factor in
+temp and sunshine hours in potential models – avoid aliasing with
+month</p>
+<p>Time factors as predictos:</p>
+<ul>
+<li>month or season, if not using weather factors</li>
+<li>weekday tyep (weekend T/F) - to see if individual households change
+schedules</li>
+</ul>
+</div>
+<div id="work-out-predictors-that-summarise-household-behaviour" class="section level2">
+<h2>work out predictors that summarise household behaviour</h2>
+<p>Weather values to consider:</p>
+<ul>
+<li>mean_temp</li>
+<li>sunshine</li>
+</ul>
+<p>But beware seasonal relationship. Can include with weekend y/n, not
+with month.</p>
+<p>So can try:</p>
+<ul>
+<li>year-round predictors with temp, sunshine, weekend OR month,
+weekend</li>
+<li>or do winter-only model, summer-only models - and don’t include
+month</li>
+</ul>
+<p>–&gt; make predictors that cover both scenarios (e.g. winter
+variation)</p>
+<p>Try to reduce to 1 row per household, with calculated variables
+explaining relationship with these predictors</p>
+<p>e.g. find slope from high to low weather value, and look at change in
+kwh (as % change?)</p>
+<p>i.e. find the coefficients for lm per household? Have a look at a few
+individual households…</p>
+<p>Simpler:</p>
+<ul>
+<li>mean/median(winter 2013 (–&gt; Feb 2014))</li>
+<li>mean/median(summer 2013)</li>
+<li>mean/median(July 2013) - as most recent (and most number
+households)</li>
+<li>mean/median(January 2014) - as most recent (and most number
+households)</li>
+<li>mean(summer) - mean(winter) kwh as summer/winter difference</li>
+<li>max(winter) - min(winter) as within-winter variation (or iqr)</li>
+<li>max(summer) - min(summer) as within-summer variation (or iqr)</li>
+<li>mean of top 10 highest kwh – helps reduce effect of any really big
+values</li>
+<li>mean of bottom 10 non-zero kwh – filter out 0s first</li>
+<li>number recorded days (so can eliminate if needed)</li>
+<li>% recorded days with 0 kWh (so can eliminate if needed)</li>
+<li>% recorded days with &gt;150 kWh (e.g.)</li>
+<li>relative winter weekend diff (% change): 100 * avg(weekendTwinter) -
+avg(weekendFwinter) / avg(winter) – or use sd or iqr</li>
+<li>relative summer weekend diff: 100 * avg(weekendTwinter) -
+avg(weekendFwinter) / avg(summer) – or use sd or iqr</li>
+<li>something to do with temp – note potential alias with winter/summer
+things</li>
+<li>something to do with sunshine – note potential alias with
+winter/summer things</li>
+</ul>
+<p>To aid in colouring plots for exploration, but not for
+clustering:</p>
+<ul>
+<li>label households with any kWh days &gt; 150 (e.g.) as high users –
+for colouring plots later</li>
+<li>label households as high/average/low as to how their median kwh
+falls in with sample median – e.g. use 0-10%, 10-20%,20-50%, 50-80%,
+80-90%, 90-100% deciles</li>
+<li>label households with any kWh = 0 days</li>
+</ul>
+<p>Instead of winter/summer, could use Jan/July – but figure that energy
+pattern is likely related to when people switch on heating schedules
+again, and this is probably more relevant to winter/summer rather than
+one month, also using only one month reduces the size of the data
+available. Could include both ways and see which seem to have strongest
+correlations.</p>
+<p>Use 2013/2014 seasons/months as most recent ones (Summer 2013, July
+2013, Winter 2013, January 2014), with most number of households.
+Cleanest data in terms of household behaviour pattern - avoids potential
+for differing behaviour year-on-year.</p>
+</div>
+<div id="possible-clusters" class="section level2">
+<h2>Possible clusters</h2>
+<p>In summary, look out for:</p>
+<ul>
+<li>high energy consumption at lower temperatures (i.e. &gt;=150 kWh at
+&lt; 13 degrees C)</li>
+<li>high energy consumption at low sunshine hours - bear in mind
+relationship to season</li>
+<li>same for radiation</li>
+</ul>
+<p>Look at the ~20 households with kwh values higher than 150 kWh –
+model these individually?</p>
+<p>Think about user behaviour: do people adjust their heating according
+to daily temp? Or do they turn it on when it gets to colder months, and
+leave it on until it’s spring again - i.e. month and weekend/weekday is
+more useful as a pattern of heating schedules</p>
+<p>Also look for households whoese kwh drops on sunny days (low cloud
+cover, high sunshine hours, high radiation) - to spot those with solar
+panels?</p>
 <!-- rnb-text-end -->
 </div>
+</div>
 
-<div id="rmd-source-code">LS0tCnRpdGxlOiAiV2VhdGhlciBkYXRhIGV4cGxvcmF0aW9uIgpvdXRwdXQ6IGh0bWxfbm90ZWJvb2sKLS0tCgpgYGB7cn0KbGlicmFyeSh0aWR5dmVyc2UpCmxpYnJhcnkoZ2dwbG90MikKbGlicmFyeShsdWJyaWRhdGUpCmxpYnJhcnkoR0dhbGx5KSAjIGZvciBnZ3BhaXJzIHRvIGV4cGxvcmUgY29ycmVsYXRpb25zCmxpYnJhcnkocHN5Y2gpICMgZm9yIHBhaXJwbG90cyB0byBleHBsb3JlIGNvcnJlbGF0aW9ucwpgYGAKCmBgYHtyfQpkYWlseV9lbmVyZ3lfd2VhdGhlciA8LSByZWFkX2NzdigiLi4vNF9jbGVhbmVkX2RhdGEvZGFpbHlfZW5lcmd5X3dlYXRoZXJfY2xlYW4uY3N2IikKZGFpbHlfZW5lcmd5X3dlYXRoZXJfYWxsIDwtIHJlYWRfY3N2KCIuLi80X2NsZWFuZWRfZGF0YS9kYWlseV9lbmVyZ3lfd2VhdGhlcl9hbGwuY3N2IikKYGBgCgojIyMgSm9pbmVkIGRhdGEKCmBgYHtyfQojIGNsZWFuZWQgaG91c2Vob2xkcwp2aWV3KHNraW1yOjpza2ltKGRhaWx5X2VuZXJneV93ZWF0aGVyKSkKYGBgCgoqIFRlbXBlcmF0dXJlcyAobWluLCBtZWFuLCBtYXgpIGFuZCBwcmVzc3VyZSB2YWx1ZXMgbG9vayBub3JtYWxseSBkaXN0cmlidXRlZCAoYXQgYSBnbGFuY2UpCiogQ2xvdWQgY292ZXIgaXMgbGVmdCBza2V3ZWQgKGkuZS4gbG90cyBhdCBoaWdoZXIgdmFsdWVzLCBsb25nIGJlZ2lubmluZyB0YWlsKQoqIFJlc3QgYXJlIHJpZ2h0IHNrZXdlZCAoaS5lLiBsb3RzIGEgbG93ZXIgdmFsdWVzLCBsb25nIGVuZGluZyB0YWlsKQoKU2NhbGVzIGFyZSBkaWZmZXJlbnQ6IDFzLCAxMHMsIGFuZCBwcmVzc3VyZSBpcyBpbiAxMDAsMDAwMHMKCjg1MyByb3dzIG1pc3NpbmcgY2xvdWRfY292ZXIgdmFsdWVzCgptaW4gdmFsdWVzIG9mIDA6IGtXaCwgY2xvdWQgY292ZXIsIHN1bnNoaW5lLCBwcmVjaXBpdGF0aW9uLCBzbm93X2RlcHRoIC0tIDAgd291bGQgYmUgYSByZWFsIHZhbHVlIGZvciBhbGwgb2YgdGhlc2UsIHNlZSB1bml0cyBiZWxvdy4KCmBgYHtyfQojIGFsbCBob3VzZWhvbGRzCnZpZXcoc2tpbXI6OnNraW0oZGFpbHlfZW5lcmd5X3dlYXRoZXJfYWxsKSkKYGBgCgpWZXJ5IHNpbWlsYXIgb3ZlcnZpZXcgc3RhdHMgaGVyZSwganVzdCBzbGlnaHRseSBzaGlmdGVkIGtXaCBkaXN0cmlidXRpb24gKHAyNSBjaGFuZ2VkKQoKIyMgQWJvdXQgdGhlIHdlYXRoZXIgb2JzZXJ2YXRpb25zCgpXaGF0IGFyZSB0aGUgdW5pdHM/IFNlZSBrYWdnbGU6IGh0dHBzOi8vd3d3LmthZ2dsZS5jb20vZGF0YXNldHMvZW1tYW51ZWxmd2Vyci9sb25kb24td2VhdGhlci1kYXRhCgoqIGRhdGUgLSByZWNvcmRlZCBkYXRlIG9mIG1lYXN1cmVtZW50IC0gKGludCkKKiBjbG91ZF9jb3ZlciAtIGNsb3VkIGNvdmVyIG1lYXN1cmVtZW50IGluIG9rdGFzIC0gKGZsb2F0KQoqIHN1bnNoaW5lIC0gc3Vuc2hpbmUgbWVhc3VyZW1lbnQgaW4gaG91cnMgKGhycykgLSAoZmxvYXQpCiogZ2xvYmFsX3JhZGlhdGlvbiAtIGlycmFkaWFuY2UgbWVhc3VyZW1lbnQgaW4gV2F0dCBwZXIgc3F1YXJlIG1ldGVyIChXL20yKSAtIChmbG9hdCkKKiBtYXhfdGVtcCAtIG1heGltdW0gdGVtcGVyYXR1cmUgcmVjb3JkZWQgaW4gZGVncmVlcyBDZWxzaXVzICjCsEMpIC0gKGZsb2F0KQoqIG1lYW5fdGVtcCAtIG1lYW4gdGVtcGVyYXR1cmUgaW4gZGVncmVlcyBDZWxzaXVzICjCsEMpIC0gKGZsb2F0KQoqIG1pbl90ZW1wIC0gbWluaW11bSB0ZW1wZXJhdHVyZSByZWNvcmRlZCBpbiBkZWdyZWVzIENlbHNpdXMgKMKwQykgLSAoZmxvYXQpCiogcHJlY2lwaXRhdGlvbiAtIHByZWNpcGl0YXRpb24gbWVhc3VyZW1lbnQgaW4gbWlsbGltZXRlcnMgKG1tKSAtIChmbG9hdCkKKiBwcmVzc3VyZSAtIHByZXNzdXJlIG1lYXN1cmVtZW50IGluIFBhc2NhbHMgKFBhKSAtIChmbG9hdCkKKiBzbm93X2RlcHRoIC0gc25vdyBkZXB0aCBtZWFzdXJlbWVudCBpbiBjZW50aW1ldGVycyAoY20pIC0gKGZsb2F0KQoKIyMjIENsb3VkIGNvdmVyCgpDbG91ZCBjb3ZlciBtZWFzdXJlZCBpbiBva3RhczogIkNsb3VkIGNvdmVyIGlzIG1lYXN1cmVkIG9uIGFuIGVpZ2h0IHBvaW50IHNjYWxlLCAwIE9rdGFzIGJlaW5nIGNsZWFyIHNreSAsIG9uZSBPY3RhIGJlaW5nIDEvOCBvZiB0aGUgc2t5IGNvdmVyZWQgaW4gY2xvdWQsIGFuZCBzbyBvbiB1cCB0byA4IE9rdGFzIC0gY29tcGxldGVseSBvdmVyY2FzdC4iIC0tIGh0dHBzOi8vd3d3LnNzZXJjLm9yZy51ay93cC1jb250ZW50L3VwbG9hZHMvMjAxMi8wNC9SZXNvdXJjZS0yXzItTWVhc3VyaW5nLUNsb3VkLUNvdmVyLnBkZgoKIyMjIFN1bnNoaW5lIGhvdXJzCgpNYXkgYmUgYWxpYXMgd2l0aCB0ZW1wZXJhdHVyZSBhbmQgcmFkaWF0aW9uOyBoaWdoZXIgc3Vuc2hpbmUgaG91cnMgbWVhbmluZyBoaWdoZXIgdGVtcHMgYW5kIG1heWJlIGFsc28gaGlnaGVyIHNvbGFyIGVuZXJneSBnZW5lcmF0aW9uIGZvciBhbnkgaG91c2Vob2xkcyB3aXRoIHNvbGFyIHBhbmVscyAobm90ZSB3ZSBkbyBub3QgaGF2ZSB0aGlzIGluZm9ybWF0aW9uIHNvIGNhbm5vdCBleGNsdWRlIHRoaXMpCgojIyMgR2xvYmFsIHJhZGlhdGlvbgoKR2xvYmFsIHJhZGlhdGlvbjogIlNvbGFyIGlycmFkaWFuY2UgaXMgdGhlIHBvd2VyIHBlciB1bml0IGFyZWEgKHN1cmZhY2UgcG93ZXIgZGVuc2l0eSkgcmVjZWl2ZWQgZnJvbSB0aGUgU3VuIGluIHRoZSBmb3JtIG9mIGVsZWN0cm9tYWduZXRpYyByYWRpYXRpb24gaW4gdGhlIHdhdmVsZW5ndGggcmFuZ2Ugb2YgdGhlIG1lYXN1cmluZyBpbnN0cnVtZW50LiIgLS0gaHR0cHM6Ly9lbi53aWtpcGVkaWEub3JnL3dpa2kvU29sYXJfaXJyYWRpYW5jZSM6fjp0ZXh0PVRoZSUyMFNJJTIwdW5pdCUyMG9mJTIwaXJyYWRpYW5jZSxvciUyMDQxJTJDODQwJTIwSiUyRm0yLgoKTWF5IGJlIHJlbGF0ZWQgdG8gdGVtcGVyYXR1cmUgYW5kIHN1bnNoaW5lIGhvdXJzLCBhbHNvIG1heSBpbmRpY2F0ZSBob3cgbXVjaCBlbmVyZ3kgZ2VuZXJhdGVkIGZyb20gaG91c2Vob2xkIHNvbGFyIHBhbmVscywgaWYgYW55LCBhbmQgdGh1cyBub3QgZHJhd24gZnJvbSB0aGUgZ3JpZCAoYW5kIHRoZXJlZm9yZSBhc3N1bWUgbm90IGluY2x1ZGVkIGluIHNtYXJ0IGVuZXJneSBtZWFzdXJlbWVudCBvZiBjb25zdW1wdGlvbikuCgojIyMgVGVtcGVyYXR1cmUKCm1heCwgbWVhbiBhbmQgbWluIGZvciBlYWNoIGRheQoKTm90ZSAwIGhlcmUgaXMgbm90IHR1cmUgMCwgaXQgcmVwcmVzZW50ZWQgMCBkZWdyZWVzIENlbHNpdXMgKGZyZWV6aW5nIHBvaW50IG9mIHdhdGVyKQoKIyMjIFByZWNpcGl0YXRpb24KCm1lYXN1cmVtZW50IGluIG1pbGxpbWV0ZXJzIChtbSkgLSBzbyBoZXJlIDAgbWVhbnMgbm8gcHJlY2lwaXRhdGlvbgoKTWF5YmUgd2VhdGhlciBkYXlzIG1lYW4gY29vbGVyIGRheXMgbWVhbiBtb3JlIGhlYXRpbmcgLSBzbyBjaGVjayBmb3IgYWxpYXNlcyB3aXRoIGVuZXJneSB1c2FnZS4KCk1heWJlIHdldHRlciBkYXlzIGFsc28gbWVhbiBtb3JlIHR1bWJsZSBkcnllciB1c2FnZSwgb3Igc2hvd2VyL2hhaXJkcnllciBpZiBnb3Qgd2V0IG91dHNpZGUuCgpDb3VsZCBjb252ZXJ0IHRvIHllcy9ubyBpZiBpbnRlcmVzdGluZyB0byBkbyBzby4KCiMjIyBQcmVzc3VyZQoKQWlyIHByZXNzdXJlIG1lYXN1cmVtZW50IGluIFBhc2NhbHMgKFBhKS4KCk5vdGU6IHN0YW5kYXJkIGF0bW9zcGhlcmljIHByZXNzdXJlIG9uIEVhcnRoIGlzIDEwMSwzMjUgUGEgKGh0dHBzOi8vZW4ud2lraXBlZGlhLm9yZy93aWtpL1Bhc2NhbF8odW5pdCkpIC0tIHNvIGNvdWxkIHJlZnJhbWUgdG8gaGlnaGVyL2xvd2VyIHRoYW4gMSBhdG1fcHJlc3Mgb3IgcmVjb2RlIHVuaXRzIHRvIG51bWJlciBvZiBhdG1vc3BoZXJpYyBwcmVzc3VyZSB1bml0cy4KCk5vdGUgcmF3IHBhc2NhbHMgaXMgY3VycmVudGx5IHYgZGlmZmVyZW50IHNjYWxlICgxMDAsMDAwcykgdG8gb3RoZXIgdW5pdHMgaW4gdGhpcyBkZi4KCiMjIyBTbm93IGRlcHRoCgptZWFzdXJlbWVudCBpbiBjZW50aW1ldGVycyAoY20pIC0gc28gMCBpcyB0cnVlIDAgaGVyZSAobWVhbmluZyBubyBzbm93KS4KCk1heSBiZSB1c2VmdWwgdG8gY29udmVydCB0byBzbm93IHllcy9ubywgc2luY2UgaXQgaXMgYSByYXJlIG9jY3VycmVuY2UsIGFuZCBkZXB0aCBtYXkgbm90IG1ha2UgbXVjaCBkaWZmZXJlbmNlIGJleW9uZCB0aGUgdGVtcCBtZWFzdXJlbWVudCAoYW55IHNub3cgbWVhbnMgaXQncyBhIGNvbGQgZGF5KS4KCgojIyBBc3NlcnRpb25zIGFib3V0IGRhdGEKCkltcHJvdmUgY2xlYW5pbmcvcHJlcGFyYXRpb25zIHN0ZXBzIHVzaW5nIGFzc2VydGlvbnMgLSB0byBzdG9wIGlmIGRhdGEgaXMgbm90IGFzIGV4cGVjdGVkCgoqIG51bWVyaWMgZGF0YToKICAqIGNsb3VkIGNvdmVyID49MCAmIDw9IDggKG9rdGEgc2NhbGUgaXMgc2V0IHRvIDAtOCkKICAqIHN1bnNoaW5lID49MCAmIDw9IDI0IChjYW4gb25seSBiZSAwIC0gMjQgaG91cnMpCiAgKiAqX3RlbXAgPj0gLTEwICYgPD0gNjAgKGkuZS4gdXNlIHJlYXNvbmFibGUgY3V0b2ZmcyBmb3IgdGVtcGVyYXR1cmUgaW4gVUspCiAgKiBtYXhfdGVtcCA+PSBtaW5fdGVtcCAmIG1heF90ZW1wID49IG1lYW5fdGVtcCAmIG1lYW5fdGVtcCA+PSBtaW5fdGVtcAoqIGRhdGUgZm9ybWF0OgogICogZGF0ZTogPj0gc3RhcnRfZGF0ZSAmIDw9IGVuZF9kYXRlIChhcyBzcGVjaWZpZWQpCiogCgpfV0lQXwoKIyMgTG9vayBmb3IgY29ycmVsYXRpb25zCgpVc2UgYGRhaWx5X2VuZXJneV93ZWF0aGVyYCBmb3IgY2xlYW5lZCBob3VzZWhvbGRzIGFuZCBgZGFpbHlfZW5lcmd5X3dlYXRoZXJfYWxsYCB0byBpbmNsdWRlIGFsbCBob3VzZWhvbGRzIChlLmcuIHdpdGggbG90cyBvZiAwcywgaW4gY2FzZSBvZiBzb2xhciBwYW5lbHMpCgoKCgoK</div>
+<div id="rmd-source-code">LS0tCnRpdGxlOiAiV2VhdGhlciBkYXRhIGV4cGxvcmF0aW9uIgpvdXRwdXQ6IGh0bWxfbm90ZWJvb2sKLS0tCgojIFNldHVwIGFuZCBsb2FkIGRhdGEKCmBgYHtyfQpsaWJyYXJ5KHRpZHl2ZXJzZSkKbGlicmFyeShnZ3Bsb3QyKQpsaWJyYXJ5KGx1YnJpZGF0ZSkKbGlicmFyeShHR2FsbHkpICMgZm9yIGdncGFpcnMgdG8gZXhwbG9yZSBjb3JyZWxhdGlvbnMKbGlicmFyeShwc3ljaCkgIyBmb3IgcGFpcnBsb3RzIHRvIGV4cGxvcmUgY29ycmVsYXRpb25zCmBgYAoKYGBge3J9CmRhaWx5X2VuZXJneV93ZWF0aGVyIDwtIHJlYWRfY3N2KCIuLi80X2NsZWFuZWRfZGF0YS9kYWlseV9lbmVyZ3lfd2VhdGhlcl9jbGVhbi5jc3YiKQpkYWlseV9lbmVyZ3lfd2VhdGhlcl9hbGwgPC0gcmVhZF9jc3YoIi4uLzRfY2xlYW5lZF9kYXRhL2RhaWx5X2VuZXJneV93ZWF0aGVyX2FsbC5jc3YiKSAjIHcvb3V0IGhob2xkcyByZW1vdmVkCgojIHdlYXRoZXIgb25seSB0byBsb29rIHNpbXBseSBhdCB0aGlzIGRhdGEgKGJ5IGRheSkKZGFpbHlfd2VhdGhlciA8LSByZWFkX2NzdigiLi4vNF9jbGVhbmVkX2RhdGEvZGFpbHlfd2VhdGhlcl9jbGVhbi5jc3YiKQpgYGAKCgojIyBBYm91dCB0aGUgd2VhdGhlciBvYnNlcnZhdGlvbnMKCldoYXQgYXJlIHRoZSB1bml0cz8gU2VlIGthZ2dsZTogaHR0cHM6Ly93d3cua2FnZ2xlLmNvbS9kYXRhc2V0cy9lbW1hbnVlbGZ3ZXJyL2xvbmRvbi13ZWF0aGVyLWRhdGEKCiogZGF0ZSAtIHJlY29yZGVkIGRhdGUgb2YgbWVhc3VyZW1lbnQgLSAoaW50KQoqIGNsb3VkX2NvdmVyIC0gY2xvdWQgY292ZXIgbWVhc3VyZW1lbnQgaW4gb2t0YXMgLSAoZmxvYXQpCiogc3Vuc2hpbmUgLSBzdW5zaGluZSBtZWFzdXJlbWVudCBpbiBob3VycyAoaHJzKSAtIChmbG9hdCkKKiBnbG9iYWxfcmFkaWF0aW9uIC0gaXJyYWRpYW5jZSBtZWFzdXJlbWVudCBpbiBXYXR0IHBlciBzcXVhcmUgbWV0ZXIgKFcvbTIpIC0gKGZsb2F0KQoqIG1heF90ZW1wIC0gbWF4aW11bSB0ZW1wZXJhdHVyZSByZWNvcmRlZCBpbiBkZWdyZWVzIENlbHNpdXMgKMKwQykgLSAoZmxvYXQpCiogbWVhbl90ZW1wIC0gbWVhbiB0ZW1wZXJhdHVyZSBpbiBkZWdyZWVzIENlbHNpdXMgKMKwQykgLSAoZmxvYXQpCiogbWluX3RlbXAgLSBtaW5pbXVtIHRlbXBlcmF0dXJlIHJlY29yZGVkIGluIGRlZ3JlZXMgQ2Vsc2l1cyAowrBDKSAtIChmbG9hdCkKKiBwcmVjaXBpdGF0aW9uIC0gcHJlY2lwaXRhdGlvbiBtZWFzdXJlbWVudCBpbiBtaWxsaW1ldGVycyAobW0pIC0gKGZsb2F0KQoqIHByZXNzdXJlIC0gcHJlc3N1cmUgbWVhc3VyZW1lbnQgaW4gUGFzY2FscyAoUGEpIC0gKGZsb2F0KQoqIHNub3dfZGVwdGggLSBzbm93IGRlcHRoIG1lYXN1cmVtZW50IGluIGNlbnRpbWV0ZXJzIChjbSkgLSAoZmxvYXQpCgojIyMgQ2xvdWQgY292ZXIKCkNsb3VkIGNvdmVyIG1lYXN1cmVkIGluIG9rdGFzOiAiQ2xvdWQgY292ZXIgaXMgbWVhc3VyZWQgb24gYW4gZWlnaHQgcG9pbnQgc2NhbGUsIDAgT2t0YXMgYmVpbmcgY2xlYXIgc2t5ICwgb25lIE9jdGEgYmVpbmcgMS84IG9mIHRoZSBza3kgY292ZXJlZCBpbiBjbG91ZCwgYW5kIHNvIG9uIHVwIHRvIDggT2t0YXMgLSBjb21wbGV0ZWx5IG92ZXJjYXN0LiIgLS0gaHR0cHM6Ly93d3cuc3NlcmMub3JnLnVrL3dwLWNvbnRlbnQvdXBsb2Fkcy8yMDEyLzA0L1Jlc291cmNlLTJfMi1NZWFzdXJpbmctQ2xvdWQtQ292ZXIucGRmCgojIyMgU3Vuc2hpbmUgaG91cnMKCk1heSBiZSBhbGlhcyB3aXRoIHRlbXBlcmF0dXJlIGFuZCByYWRpYXRpb247IGhpZ2hlciBzdW5zaGluZSBob3VycyBtZWFuaW5nIGhpZ2hlciB0ZW1wcyBhbmQgbWF5YmUgYWxzbyBoaWdoZXIgc29sYXIgZW5lcmd5IGdlbmVyYXRpb24gZm9yIGFueSBob3VzZWhvbGRzIHdpdGggc29sYXIgcGFuZWxzIChub3RlIHdlIGRvIG5vdCBoYXZlIHRoaXMgaW5mb3JtYXRpb24gc28gY2Fubm90IGV4Y2x1ZGUgdGhpcykKCiMjIyBHbG9iYWwgcmFkaWF0aW9uCgpHbG9iYWwgcmFkaWF0aW9uOiAiU29sYXIgaXJyYWRpYW5jZSBpcyB0aGUgcG93ZXIgcGVyIHVuaXQgYXJlYSAoc3VyZmFjZSBwb3dlciBkZW5zaXR5KSByZWNlaXZlZCBmcm9tIHRoZSBTdW4gaW4gdGhlIGZvcm0gb2YgZWxlY3Ryb21hZ25ldGljIHJhZGlhdGlvbiBpbiB0aGUgd2F2ZWxlbmd0aCByYW5nZSBvZiB0aGUgbWVhc3VyaW5nIGluc3RydW1lbnQuIiAtLSBodHRwczovL2VuLndpa2lwZWRpYS5vcmcvd2lraS9Tb2xhcl9pcnJhZGlhbmNlIzp+OnRleHQ9VGhlJTIwU0klMjB1bml0JTIwb2YlMjBpcnJhZGlhbmNlLG9yJTIwNDElMkM4NDAlMjBKJTJGbTIuCgpNYXkgYmUgcmVsYXRlZCB0byB0ZW1wZXJhdHVyZSBhbmQgc3Vuc2hpbmUgaG91cnMsIGFsc28gbWF5IGluZGljYXRlIGhvdyBtdWNoIGVuZXJneSBnZW5lcmF0ZWQgZnJvbSBob3VzZWhvbGQgc29sYXIgcGFuZWxzLCBpZiBhbnksIGFuZCB0aHVzIG5vdCBkcmF3biBmcm9tIHRoZSBncmlkIChhbmQgdGhlcmVmb3JlIGFzc3VtZSBub3QgaW5jbHVkZWQgaW4gc21hcnQgZW5lcmd5IG1lYXN1cmVtZW50IG9mIGNvbnN1bXB0aW9uKS4KCiMjIyBUZW1wZXJhdHVyZQoKbWF4LCBtZWFuIGFuZCBtaW4gZm9yIGVhY2ggZGF5CgpOb3RlIDAgaGVyZSBpcyBub3QgdHVyZSAwLCBpdCByZXByZXNlbnRlZCAwIGRlZ3JlZXMgQ2Vsc2l1cyAoZnJlZXppbmcgcG9pbnQgb2Ygd2F0ZXIpCgojIyMgUHJlY2lwaXRhdGlvbgoKbWVhc3VyZW1lbnQgaW4gbWlsbGltZXRlcnMgKG1tKSAtIHNvIGhlcmUgMCBtZWFucyBubyBwcmVjaXBpdGF0aW9uCgpNYXliZSB3ZWF0aGVyIGRheXMgbWVhbiBjb29sZXIgZGF5cyBtZWFuIG1vcmUgaGVhdGluZyAtIHNvIGNoZWNrIGZvciBhbGlhc2VzIHdpdGggZW5lcmd5IHVzYWdlLgoKTWF5YmUgd2V0dGVyIGRheXMgYWxzbyBtZWFuIG1vcmUgdHVtYmxlIGRyeWVyIHVzYWdlLCBvciBzaG93ZXIvaGFpcmRyeWVyIGlmIGdvdCB3ZXQgb3V0c2lkZS4KCkNvdWxkIGNvbnZlcnQgdG8geWVzL25vIGlmIGludGVyZXN0aW5nIHRvIGRvIHNvLgoKIyMjIFByZXNzdXJlCgpBaXIgcHJlc3N1cmUgbWVhc3VyZW1lbnQgaW4gUGFzY2FscyAoUGEpLgoKTm90ZTogc3RhbmRhcmQgYXRtb3NwaGVyaWMgcHJlc3N1cmUgb24gRWFydGggaXMgMTAxLDMyNSBQYSAoaHR0cHM6Ly9lbi53aWtpcGVkaWEub3JnL3dpa2kvUGFzY2FsXyh1bml0KSkgLS0gc28gY291bGQgcmVmcmFtZSB0byBoaWdoZXIvbG93ZXIgdGhhbiAxIGF0bV9wcmVzcyBvciByZWNvZGUgdW5pdHMgdG8gbnVtYmVyIG9mIGF0bW9zcGhlcmljIHByZXNzdXJlIHVuaXRzLgoKTm90ZSByYXcgcGFzY2FscyBpcyBjdXJyZW50bHkgdiBkaWZmZXJlbnQgc2NhbGUgKDEwMCwwMDBzKSB0byBvdGhlciB1bml0cyBpbiB0aGlzIGRmLgoKIyMjIFNub3cgZGVwdGgKCm1lYXN1cmVtZW50IGluIGNlbnRpbWV0ZXJzIChjbSkgLSBzbyAwIGlzIHRydWUgMCBoZXJlIChtZWFuaW5nIG5vIHNub3cpLgoKTWF5IGJlIHVzZWZ1bCB0byBjb252ZXJ0IHRvIHNub3cgeWVzL25vLCBzaW5jZSBpdCBpcyBhIHJhcmUgb2NjdXJyZW5jZSwgYW5kIGRlcHRoIG1heSBub3QgbWFrZSBtdWNoIGRpZmZlcmVuY2UgYmV5b25kIHRoZSB0ZW1wIG1lYXN1cmVtZW50IChhbnkgc25vdyBtZWFucyBpdCdzIGEgY29sZCBkYXkpLgoKIyMgU2tpbQoKYGBge3J9CnZpZXcoc2tpbXI6OnNraW0oZGFpbHlfd2VhdGhlcikpCmBgYAoKMSBtaXNzaW5nIHZhbHVlIGZvciBjbG91ZF9jb3ZlcgoKKiBUZW1wZXJhdHVyZXMgKG1pbiwgbWVhbiwgbWF4KSBhbmQgcHJlc3N1cmUgdmFsdWVzIGxvb2sgbm9ybWFsbHkgZGlzdHJpYnV0ZWQsIG1heF90ZW1wIG1vc3Qgc28sIG1lYW5fdGVtcCBzdGlsbCBsb29rcyBvaywgbWluX3RlbXAgbWlnaHQgYmUgYSBsaXR0bGUgcmlnaHQgc2tld2VkCiogQ2xvdWQgY292ZXIgaXMgbGVmdCBza2V3ZWQgKGkuZS4gbG90cyBhdCBoaWdoZXIgdmFsdWVzLCBsb25nIGJlZ2lubmluZyB0YWlsKQoqIFJlc3QgKHN1bnNoaW5lLCByYWRpYXRpb24sIHByZWNpcGl0YXRpb24sIHNub3dfZGVwdGgpIGFyZSByaWdodCBza2V3ZWQgKGkuZS4gbG90cyBhIGxvd2VyIHZhbHVlcywgbG9uZyBlbmRpbmcgdGFpbCkKClNjYWxlcyBhcmUgZGlmZmVyZW50OiAxcywgMTBzLCBhbmQgcHJlc3N1cmUgaXMgaW4gMTAwLDAwMDBzCgptaW4gdmFsdWVzIG9mIDA6IGtXaCwgY2xvdWQgY292ZXIsIHN1bnNoaW5lLCBwcmVjaXBpdGF0aW9uLCBzbm93X2RlcHRoIC0tIDAgd291bGQgYmUgYSByZWFsIHZhbHVlIGZvciBhbGwgb2YgdGhlc2UsIHNlZSB1bml0cyBiZWxvdy4KCiMjIFsgXSBBc3NlcnRpb25zIGFib3V0IGRhdGEKCkltcHJvdmUgY2xlYW5pbmcvcHJlcGFyYXRpb25zIHN0ZXBzIGZvciB3ZWF0aGVyIGRhdGEKCkluY2x1ZGUgYXNzZXJ0aW9ucyB0byBzdG9wIG9yIHdhcm4gaWYgZGF0YSBpcyBub3QgYXMgZXhwZWN0ZWQ6CgoqIG51bWVyaWMgZGF0YToKICAqIGNsb3VkIGNvdmVyID49MCAmIDw9IDggKG9rdGEgc2NhbGUgaXMgc2V0IHRvIDAtOCkKICAqIHN1bnNoaW5lID49MCAmIDw9IDI0IChjYW4gb25seSBiZSAwIC0gMjQgaG91cnMpCiAgKiAqX3RlbXAgPj0gLTIwICYgPD0gNTAgKGkuZS4gdXNlIHJlYXNvbmFibGUgY3V0b2ZmcyBmb3IgdGVtcGVyYXR1cmUgaW4gVUspCiAgKiBETyBOT1QgVVNFIFRIRVNFOiBtYXhfdGVtcCA+PSBtaW5fdGVtcCAmIG1heF90ZW1wID49IG1lYW5fdGVtcCAmIG1lYW5fdGVtcCA+PSBtaW5fdGVtcAoqIGRhdGUgZm9ybWF0OgogICogZGF0ZTogPj0gc3RhcnRfZGF0ZSAmIDw9IGVuZF9kYXRlIChhcyBzcGVjaWZpZWQpCgojIyMgQ2xlYW5pbmcgc3RlcHMgZm9yIHdlYXRoZXIgZGF0YQoKT3RoZXIgY2xlYW5pbmcgc3RlcHM6CgoqIGFkZCBxdWFsaXR5IGNvbCB0byBub3RlIHRoZSBkYXlzIHdoZXJlIAogICogbWVhbl90ZW1wID4gbWF4X3RlbXAgKGl0IHNob3VsZG4ndCBiZSEpCiAgKiBtaW5fdGVtcCA+IG1heF90ZW1wCiogY29udmVydCBwcmVzc3VyZSB0byBhdG0gcHJlc3N1cmUgdW5pdHMgKGkuZS4gLyAxMDEsMzI1IFBhKSAtIF9ubyBuZWVkLCBub3QgdXNpbmcgaW4gdGhpcyBpdGVyYXRpb25fCiogYWRkIHZhciBmb3Igc25vdyB5ZXMvbm8KKiBhZGQgdmFyIGZvciBwcmVjaXBpdGF0aW9uIHllcy9ubwoqIGlmIG5vdCB1c2luZyBzZWFzb24vbW9udGgsIGNvdWxkIGFkZCB0ZW1wX2xldmVscyBmYWN0b3IgKGxvdywgbWVkaXVtLCBoaWdoIC0gd29yayBvdXQgaG93KSAtIF9ub3QgZG9pbmcgaW4gdGhpcyBpdGVyYXRpb25fCgpgYGB7cn0KZGFpbHlfd2VhdGhlcl90cmltIDwtIHJlYWRfY3N2KCIuLi8zX3Jhd19kYXRhL2xvbmRvbl93ZWF0aGVyLmNzdiIpICU+JSAKICBqYW5pdG9yOjpjbGVhbl9uYW1lcygpICU+JSAKICBtdXRhdGUoZGF0ZSA9IHltZChkYXRlKSkgJT4lIAogIGZpbHRlcihhc19kYXRlKGRhdGUpID49IHN0YXJ0X2RhdGUgJiBhc19kYXRlKGRhdGUpIDw9IGVuZF9kYXRlKQpgYGAKCmBgYHtyfQpkYWlseV93ZWF0aGVyX2NsZWFuIDwtIGRhaWx5X3dlYXRoZXJfdHJpbSAlPiUgCiAgIyBhZGQgcXVhbGl0eSBjb2wgdG8gbm90ZSB0aGUgZGF5cyB3aGVyZSAoMSkgbWVhbl90ZW1wID4gbWF4X3RlbXAgCiAgIyBhbmQgKDIpIG1pbl90ZW1wID4gbWF4X3RlbXAKICBtdXRhdGUodGVtcF9xdWFsID0gY2FzZV93aGVuKAogICAgbWVhbl90ZW1wID4gbWF4X3RlbXAgJiBtaW5fdGVtcCA+IG1heF90ZW1wIH4gIndhcm5pbmc6IG1heCB0ZW1wIGxlc3MgdGhhbiBtaW4gdGVtcCBhbmQgbWVhbiB0ZW1wIiwKICAgIG1lYW5fdGVtcCA+IG1heF90ZW1wIH4gIndhcm5pbmc6IG1heCB0ZW1wIGxlc3MgdGhhbiBtZWFuIHRlbXAiLAogICAgbWluX3RlbXAgPiBtYXhfdGVtcCB+ICJ3YXJuaW5nOiBtYXggdGVtcCBsZXNzIHRoYW4gbWluIHRlbXAiLAogICAgLmRlZmF1bHQgPSBOQV9jaGFyYWN0ZXJfCiAgKSkgJT4lIAogICMgYWRkIHZhciBmb3Igc25vdyB5ZXMvbm8KICBtdXRhdGUoc25vd190ZiA9IGlmX2Vsc2Uoc25vd19kZXB0aCA+IDAsIFQsIEYpLCAuYmVmb3JlID0gc25vd19kZXB0aCkgJT4lIAogICMgYWRkIHZhciBmb3IgcHJlY2lwaXRhdGlvbiB5ZXMvbm8KICBtdXRhdGUocHJlY2lwaXRhdGlvbl90ZiA9IGlmX2Vsc2UocHJlY2lwaXRhdGlvbiA+IDAsIFQsIEYpLCAuYmVmb3JlID0gcHJlY2lwaXRhdGlvbikKYGBgCgpgYGB7cn0KZGFpbHlfd2VhdGhlcl9jbGVhbiAlPiUgCiAgc3VtbWFyaXNlKGNvdW50ID0gbigpLCAuYnkgPSB0ZW1wX3F1YWwpCmBgYAoKYGBge3J9CmRhaWx5X3dlYXRoZXJfY2xlYW4gJT4lIAogIHNlbGVjdChzbm93X3RmLCBzbm93X2RlcHRoKSAlPiUgCiAgc3VtbWFyaXNlKHNub3d5X2RheXMgPSBuKCksIC5ieSA9IHNub3dfdGYpCmBgYAoKYGBge3J9CmRhaWx5X3dlYXRoZXJfY2xlYW4gJT4lIAogIHN1bW1hcmlzZShyYWlueV9kYXlzID0gbigpLCAuYnkgPSBwcmVjaXBpdGF0aW9uX3RmKQpgYGAKClN1bW1hcnkgZnJvbSB0aGVzZSBjbGVhbmluZyBzdGVwczoKCioqaW5jbHVkZSBpbiB3cml0ZS11cCoqCgoqIERhdGEgcXVhbGl0eSBub3RlOiA2NCBkYXRlcyB3aGVyZSBtYXggdGVtcCA8IG1lYW4gdGVtcCwgb2Ygd2hpY2ggMTQgZGF0ZXMgd2hlcmUgbWF4IHRlbXAgYWxzbyBsZXNzIHRoYW4gbWluIHRlbXAuCiogMTAgZGF5cyB3aXRoIHNub3csIDgxMCBkYXlzIHdpdGhvdXQKKiA0NDYgZGF5cyB3aXRoIHByZWNpcGl0YXRpb24sIG91dCBvZiA4MjAKCiMjIyBbIF0gQ2xlYW5pbmcgc3RlcHMgZm9yIGVuZXJneSBkYXRhCgpJbiBlbmVyZ3kgZGF0YSBwcmVwOgoKKiBjaGVjayBmb3IgYW55IE5BX2NoYXJhY3Rlcl8gPC0tIHdvdWxkIGhhdmUgYmVlbiBjcmVhdGVkIHRocm91Z2ggbXkgcmVjb2Rpbmcgc3RlcHMKKiBhc3NlcnQga3doID49IDAgJiBrd2ggPCA1MDAgKHJlYXNvbmFibGUgdXBwZXIgbGltaXQgY3V0b2ZmKQoqIGFzc2VydCBkYXRlID49IHN0YXJ0X2RhdGUgJiA8PSBlbmRfZGF0ZSAoYXMgc3BlY2lmaWVkKQoKIyMjIGNoZWNrIGRhdGEgcXVhbGl0eQoKQXNzZXJ0aW9ucyBhYm92ZSBwYXNzLCBleGNlcHQgZm9yIHRoZSBmb2xsb3dpbmcsIGZvciB3aGljaCBhZGQgZGF0YSBxdWFsaXR5IGNvbHMgdG8gbm90ZSB0aGVzZSEKCiogNjQgZGF5cyB3aGVyZSBtYXhfdGVtcCA8IG1lYW5fdGVtcCB2YWx1ZQoqIDE0IGRheXMgd2hlcmUgbWluX3RlbXAgPiBtYXhfdGVtcAoqIDEgZGF5IHdoZXJlIG1pbiA9PSBtYXgsIGJ1dCBtZWFuIGlzIGxhcmdlcgoKYGBge3J9CmRhaWx5X3dlYXRoZXIgJT4lIAogIGZpbHRlcihtaW5fdGVtcCA9PSBtYXhfdGVtcCkKYGBgCgoKIyBFeHBsb3JlIGNvcnJlbGF0aW9ucwoKVXNlIGBkYWlseV9lbmVyZ3lfd2VhdGhlcmAgZm9yIGNsZWFuZWQgaG91c2Vob2xkcyBhbmQgYGRhaWx5X2VuZXJneV93ZWF0aGVyX2FsbGAgdG8gaW5jbHVkZSBhbGwgaG91c2Vob2xkcyAoZS5nLiB3aXRoIGxvdHMgb2YgMHMsIGluIGNhc2Ugb2Ygc29sYXIgcGFuZWxzKQoKX05vdGU6IGdncGFpcnMgb3IgcGFpcnMucGFuZWxzIG5vdCBydW5uaW5nIHJpZ2h0IG5vd18KCgojIyBrd2ggfiBtZWFuX3RlbXAKCmBgYHtyfQpkYWlseV9lbmVyZ3lfd2VhdGhlcl9hbGwgJT4lIAogIGdncGxvdCgpICsKICBnZW9tX3BvaW50KGFlcyh4ID0gbWVhbl90ZW1wLCB5ID0ga3doKSkKYGBgCgpUaGVyZSBhcmUgcG9pbnRzIHdpdGggbXVjaCBoaWdoZXIgdXNhZ2VzIGFzIGxvd2VyIHRlbXBlcmF0dXJlcyAtIGFyZSB0aGV5IHRoZSBzYW1lIGhvdXNlaG9sZD8KCgpgYGB7cn0KZGFpbHlfZW5lcmd5X3dlYXRoZXJfYWxsICU+JSAKICBmaWx0ZXIoa3doID4gMTUwKSAlPiUgCiAgZ2dwbG90KCkgKwogIGdlb21fcG9pbnQoYWVzKHggPSBtZWFuX3RlbXAsIHkgPSBrd2gsIGNvbG91ciA9IGxjX2xpZCkpCmBgYAoKVGhleSBhcmUgbm90IHRoZSBzYW1lIGhvdXNlaG9sZHMsIGJ1dCBhcmUgb25seSBhIHNtYWxsIG51bWJlciAoMjIpIG9mIHRoZSA1LDUwMCB0b3RhbCAobm90ZTogdGhpcyBpcyB0aGUgdW5jbGVhbmVkIGRhdGFzZXQpCgpDaGVjayBhbHNvIHdpdGggdGhlIGNsZWFuZWQgZGF0YXNldAoKYGBge3J9CmRhaWx5X2VuZXJneV93ZWF0aGVyICU+JSAKICBnZ3Bsb3QoKSArCiAgZ2VvbV9wb2ludChhZXMoeCA9IG1lYW5fdGVtcCwgeSA9IGt3aCkpCmBgYAoKCmBgYHtyfQpkYWlseV9lbmVyZ3lfd2VhdGhlciAlPiUgCiAgZmlsdGVyKGt3aCA+IDE1MCkgJT4lIAogIGdncGxvdCgpICsKICBnZW9tX3BvaW50KGFlcyh4ID0gbWVhbl90ZW1wLCB5ID0ga3doLCBjb2xvdXIgPSBsY19saWQpKQpgYGAKCldlJ3ZlIG9ubHkgbG9zdCBvbiBob3VzZWhvbGQgZnJvbSB0aGUgY2xlYW5pbmcgc3RlcAoKIyMga3doIH4gc3Vuc2hpbmUKCmBgYHtyfQpkYWlseV9lbmVyZ3lfd2VhdGhlcl9hbGwgJT4lIAogIGdncGxvdCgpICsKICBnZW9tX3BvaW50KGFlcyh4ID0gc3Vuc2hpbmUsIHkgPSBrd2gpKQpgYGAKCkdlbmVyYWwgdHJlbmQgb2YgbG93ZXIga1doIGFzIG51bWJlciBvZiBzdW5zaGluZSBob3VycyBpbmNyZWFzZXMKClNvbWUgaG91c2Vob2xkcyB3aXRoIG11Y2ggaGlnaGVyIHVzZSAoPjE1MCBrd2gpIHdoZW4gc3Vuc2hpbmUgbGVzcyAoPDggaG91cnMpIC0tIHJlbWVtYmVyIHN1bnNoaW5lIGhvdXJzIG1pZ2h0IGJlIGZhY3RvciBvZiBzZWFzb24KCmBgYHtyfQpkYWlseV9lbmVyZ3lfd2VhdGhlcl9hbGwgJT4lIAogIGZpbHRlcihrd2ggPiAxNTApICU+JSAKICBnZ3Bsb3QoKSArCiAgZ2VvbV9wb2ludChhZXMoeCA9IHN1bnNoaW5lLCB5ID0ga3doLCBjb2xvdXIgPSBsY19saWQpKQpgYGAKCiMjIGt3aCB+IHJhZGlhdGlvbgoKYGBge3J9CmRhaWx5X2VuZXJneV93ZWF0aGVyX2FsbCAlPiUgCiAgZ2dwbG90KCkgKwogIGdlb21fcG9pbnQoYWVzKHggPSBnbG9iYWxfcmFkaWF0aW9uLCB5ID0ga3doKSkKYGBgCgpTYW1lIHBhdHRlcm4uLi4gaGlnaCB1c2Ugb24gbG93IHJhZGlhdGlvbiBkYXlzCgpGaW5kIGFueSBtaWRkbGUgdXNlcnMgd2hvIGRyb3AgdG8gemVybyBhdCBoaWdoIHJhZGlhdGlvbiAoY29uc2lkZXIgc29sYXIgcGFuZWxzKT8KCmBgYHtyfQpkYWlseV9lbmVyZ3lfd2VhdGhlcl9hbGwgJT4lIAogIGZpbHRlcihrd2ggPiAxNTApICU+JSAKICBnZ3Bsb3QoKSArCiAgZ2VvbV9wb2ludChhZXMoeCA9IGdsb2JhbF9yYWRpYXRpb24sIHkgPSBrd2gsIGNvbG91ciA9IGxjX2xpZCkpCmBgYAoKIyMga3doIH4gcHJlY2lwaXRhdGlvbgoKYGBge3J9CmRhaWx5X2VuZXJneV93ZWF0aGVyX2FsbCAlPiUgCiAgZ2dwbG90KCkgKwogIGdlb21fcG9pbnQoYWVzKHggPSBwcmVjaXBpdGF0aW9uLCB5ID0ga3doKSkKYGBgCgpNb3N0IGRheXMgaGF2ZSBsb3cgcHJlY2lwaXRhdGlvbiwgc29tZSBoaWdoIHZhbHVlcyBvbiB0aGVzZSBkYXlzLiBObyBvYnZpb3VzIHBhdHRlcm4gZm9yIGVuZXJneSB1c2FnZSBhdCBoaWdoZXIgcHJlY2lwaXRhdGlvbi4KClN1Z2dlc3QgZHJvcHBpbmcgcHJlY2lwaXRhdGlvbi4KCiMjIGt3aCB+IHNub3dfZGVwdGgKCmBgYHtyfQpkYWlseV9lbmVyZ3lfd2VhdGhlcl9hbGwgJT4lIAogIGdncGxvdCgpICsKICBnZW9tX3BvaW50KGFlcyh4ID0gc25vd19kZXB0aCwgeSA9IGt3aCkpCmBgYAogTW9zdCBkYXlzIGhhdmUgbm8gc25vdy4uLiBmaWx0ZXIgZm9yID4gMAogCmBgYHtyfQpkYWlseV9lbmVyZ3lfd2VhdGhlcl9hbGwgJT4lIAogIGZpbHRlcihzbm93X2RlcHRoID4gMCkgJT4lIAogIG11dGF0ZShzbm93X2RlcHRoID0gZmFjdG9yKHNub3dfZGVwdGgpKSAlPiUgCiAgZ2dwbG90KCkgKwogIGdlb21fYm94cGxvdChhZXMoeCA9IHNub3dfZGVwdGgsIHkgPSBrd2gpKQpgYGAKIApObyBjb3JyZWxhdGlvbiBoZXJlLCBkcm9wIHNub3dfZGVwdGgKCkxvb2sgYXQgc25vdyB5ZXMvbm86CgpgYGB7cn0KZGFpbHlfZW5lcmd5X3dlYXRoZXJfYWxsICU+JSAKICBtdXRhdGUoc25vdyA9IGlmX2Vsc2Uoc25vd19kZXB0aCA9PSAwLCBGLCBUKSkgJT4lIAogIGdncGxvdCgpICsKICBnZW9tX2JveHBsb3QoYWVzKHggPSBzbm93LCB5ID0ga3doKSkKIyBub3RlIHRoaXMgZG9lcyBub3QgYWNjb3VudCBmb3Igd2l0aGluLWhvdXNlaG9sZCByZWxhdGlvbnNoaXAhCmBgYAoKV291bGQgbmVlZCB0byBsb29rIGF0IGtXaCBjaGFuZ2UgYmFzZWQgb24gc25vdyB5ZXMvbm8KCiMjIGt3aCB+IHByZXNzdXJlCgpgYGB7cn0KZGFpbHlfZW5lcmd5X3dlYXRoZXJfYWxsICU+JSAKICBnZ3Bsb3QoKSArCiAgZ2VvbV9wb2ludChhZXMoeCA9IHByZXNzdXJlLCB5ID0ga3doKSkKYGBgCgpObyBkaXNjZXJuaWJsZSBuZWcvcG9zIGNvcnJlbGF0aW9uIHdpdGgga1doIGhlcmUsIHN1Z2dlc3QgZHJvcHBpbmcgcHJlc3N1cmUKCiMjIGt3aCB+IGNsb3VkX2NvdmVyCgpOb3RlIGNsb3VkIGNvdmVyIGlzIG5vdCBjb250aW51b3VzIG51bWVyaWMsIGl0J3MgYSBzY2FsZSBzeXN0ZW0sIG1ha2UgaXQgYSBmYWN0b3IuLi4KCmBgYHtyfQpkYWlseV9lbmVyZ3lfd2VhdGhlcl9hbGwgJT4lIAogIG11dGF0ZShjbG91ZF9jb3ZlciA9IGZhY3RvcihjbG91ZF9jb3ZlcikpICU+JSAKICBnZ3Bsb3QoKSArCiAgZ2VvbV9ib3hwbG90KGFlcyh4ID0gY2xvdWRfY292ZXIsIHkgPSBrd2gpKQpgYGAKCk5vIGRpc2NlcmluYmxlIHBhdHRlcm4gaGVyZQoKIyMga3doIH4gbWluX3RlbXAKCmBgYHtyfQpkYWlseV9lbmVyZ3lfd2VhdGhlcl9hbGwgJT4lIAogIGdncGxvdCgpICsKICBnZW9tX3BvaW50KGFlcyh4ID0gbWluX3RlbXAsIHkgPSBrd2gpKQpgYGAKClNpbWlsYXIgcGF0dGVybiB0byBtZWFuX3RlbXAgCgojIyBrd2ggfiBtYXhfdGVtcAoKYGBge3J9CmRhaWx5X2VuZXJneV93ZWF0aGVyX2FsbCAlPiUgCiAgZ2dwbG90KCkgKwogIGdlb21fcG9pbnQoYWVzKHggPSBtYXhfdGVtcCwgeSA9IGt3aCkpCmBgYAoKQWdhaW4gc2ltaWxhciBwYXR0ZXJuIHRvIG1lYW5fdGVtcAoKIyB1bmRlcnN0YW5kIHdlYXRoZXIgYW5kIG1vbnRoIGNvcnJlbGF0aW9ucwoKZS5nLiBzdW5zaGluZSBob3VycywgcmFkaWF0aW9uLCBtZWFuX3RlbXAKCmBgYHtyfQpkYWlseV93ZWF0aGVyICU+JSAKICBnZ3Bsb3QoYWVzKHggPSBzdW5zaGluZSwgeSA9IG1lYW5fdGVtcCkpICsKICBnZW9tX3BvaW50KCkgKwogIGdlb21fc21vb3RoKCkKYGBgCgpEZWZhdWx0IGxpbmUgb2YgYmVzdCBmaXQgaXMgbm90IHN0cmFpZ2h0LCBidXQgdHlwaWNhbGx5IGFzIHN1bnNoaW5lIGhvdXJzIGluY3JlYXNlLCBtZWFuX3RlbXAgaW5jcmVhc2VzCgpgYGB7cn0KZGFpbHlfd2VhdGhlciAlPiUgCiAgZ2dwbG90KGFlcyh4ID0gc3Vuc2hpbmUsIHkgPSBtZWFuX3RlbXApKSArCiAgZ2VvbV9wb2ludCgpICsKICBnZW9tX3Ntb290aChtZXRob2QgPSBsbSkKYGBgCgpDbGVhcmx5IGEgcG9zaXRpdmUgY29ycmVsYXRpb24gaGVyZSwgc28gdGFrZSBjYXJlIHdpdGggdXNpbmcgbWVhbl90ZW1wIGFuZCBzdW5zaGluZSBob3VycwoKV2h5IGFyZSB0aGVyZSB2YWx1ZXMgd2l0aCAwIHN1bnNoaW5lIGhvdXJzPyBMb29rIGF0IGNsb3VkIGNvdmVyLi4uCgpgYGB7cn0KZGFpbHlfd2VhdGhlciAlPiUgCiAgZ2dwbG90KGFlcyh5ID0gc3Vuc2hpbmUsIHggPSBjbG91ZF9jb3ZlcikpICsKICBnZW9tX3BvaW50KCkKYGBgCgpUaGVyZSBhcmUgbG93IG51bWJlcnMgb2Ygc3Vuc2hpbmUgaG91cnMgYXMgY2xvdWQgY292ZXIgZ2V0cyBoaWdoIC0tIHN1Z2dlc3RzIHRoZSBzdW5zaGluZSBob3VycyB2YWx1ZSBpcyBtb3JlIHRvIGRvIHdpdGggZGlyZWN0IHN1bnNoaW5lIHJhdGhlciB0aGFuIGRheWxpZ2h0LgoKQ2hlY2sgc3Vuc2hpbmUgaG91cnMgdiByYWRpYXRpb24KcmFkaWF0aW9uIHYgY2xvdWRfY292ZXIgdG9vCgpgYGB7cn0KZGFpbHlfd2VhdGhlciAlPiUgCiAgZ2dwbG90KGFlcyh4ID0gc3Vuc2hpbmUsIHkgPSBnbG9iYWxfcmFkaWF0aW9uKSkgKwogIGdlb21fcG9pbnQoKSArCiAgZ2VvbV9zbW9vdGgoKQpgYGAKClZlcnkgY2xlYXIgcG9zaXRpdmUgY29ycmVsYXRpb24gaGVyZSwgbW9yZSBzdW5zaGluZSBob3VycyA9IGhpZ2hlciByYWRpYXRpb24KCmBgYHtyfQpkYWlseV93ZWF0aGVyICU+JSAKICBnZ3Bsb3QoYWVzKHkgPSBnbG9iYWxfcmFkaWF0aW9uLCB4ID0gY2xvdWRfY292ZXIpKSArCiAgZ2VvbV9wb2ludCgpCmBgYAoKIyMgdGltZSB+IGVuZXJneQoKIyMjIG1vbnRoIH4gZW5lcmd5CgpgYGB7cn0KZGFpbHlfZW5lcmd5X3dlYXRoZXIgJT4lIAogIGdncGxvdChhZXMoeCA9IG1vbnRoLCB5ID0ga3doKSkgKwogIGdlb21fYm94cGxvdCgpCgpkYWlseV9lbmVyZ3lfd2VhdGhlcl9hbGwgJT4lIAogIGdncGxvdChhZXMoeCA9IG1vbnRoLCB5ID0ga3doKSkgKwogIGdlb21fYm94cGxvdCgpCmBgYAoKKE5vdGUgY2xlYW5lZCBvbmx5IGhhcyBzbGlnaHQgZGlmZmVyZW5jZSB0byBhbGwgaG91c2Vob2xkcykKClZlcnkgbG9uZyB0YWlsIGluIFEzLVE0IHJhbmdlLCBtYWtpbmcgaXQgaGFyZGVyIHRvIHNlZSBtZWRpYW5zIC0tIGJ1dCBub3RlIGVuZXJneSBpcyBoaWdoZXIgaW4gTm92LU1hciwgbG93ZXIgaW4gTWF5IC0gQXVnLgoKIyMjIHNlYXNvbiB+IGVuZXJneQoKYGBge3J9CmRhaWx5X2VuZXJneV93ZWF0aGVyICU+JSAKICBnZ3Bsb3QoYWVzKHggPSBzZWFzb24sIHkgPSBrd2gpKSArCiAgZ2VvbV9ib3hwbG90KCkKCmRhaWx5X2VuZXJneV93ZWF0aGVyX2FsbCAlPiUgCiAgZ2dwbG90KGFlcyh4ID0gc2Vhc29uLCB5ID0ga3doKSkgKwogIGdlb21fYm94cGxvdCgpCmBgYAoKRG9lcyBsb29rIGxpa2Ugc3VtbWVyL3dpbnRlciBlZmZlY3QsIHdpbnRlciBoaWdoZXIgZW5lcmd5IHNwZW5kIChzcHJpbmcvZmFsbCBiZXR3ZWVuIHRoZSB0d28pCgojIyMgd2Vla2RheSB0eXBlIH4gZW5lcmd5CgpgYGB7cn0KZGFpbHlfZW5lcmd5X3dlYXRoZXIgJT4lIAogIGdncGxvdChhZXMoeCA9IHdlZWtlbmQsIHkgPSBrd2gpKSArCiAgZ2VvbV9ib3hwbG90KCkKCmRhaWx5X2VuZXJneV93ZWF0aGVyX2FsbCAlPiUgCiAgZ2dwbG90KGFlcyh4ID0gd2Vla2VuZCwgeSA9IGt3aCkpICsKICBnZW9tX2JveHBsb3QoKQpgYGAKCkhhcmQgdG8gZGlzY2VybiBhIGRpZmZlcmVuY2UgaGVyZSwgbG9vayB3aXRoIHNlYXNvbiB0b28KCmBgYHtyfQpkYWlseV9lbmVyZ3lfd2VhdGhlciAlPiUgCiAgZmlsdGVyKHNlYXNvbiAhPSAiU3ByaW5nL0F1dHVtbiIpICU+JSAKICBnZ3Bsb3QoYWVzKHggPSB3ZWVrZW5kLCB5ID0ga3doKSkgKwogIGdlb21fYm94cGxvdCgpICsKZmFjZXRfd3JhcCh+IHNlYXNvbikKCmRhaWx5X2VuZXJneV93ZWF0aGVyX2FsbCAlPiUgCiAgZ2dwbG90KGFlcyh4ID0gd2Vla2VuZCwgeSA9IGt3aCkpICsKICBnZW9tX2JveHBsb3QoKSArCmZhY2V0X3dyYXAofiBzZWFzb24pCmBgYAoKYGBge3J9CmRhaWx5X2VuZXJneV93ZWF0aGVyICU+JSAKICBmaWx0ZXIoa3doIDwgMTAwKSAlPiUgIyB6b29tIGluCiAgZ2dwbG90KCkgKwogIGdlb21faGlzdG9ncmFtKGFlcyh4ID0ga3doKSwgYmlucyA9IDEwMCkgKwpmYWNldF93cmFwKHdlZWtlbmQgfiBzZWFzb24sIG5jb2wgPSAzKQpgYGAKClNlYXNvbmFsIGRlY29tcG9zaXRpb24gc3VnZ2VzdCBsZXZlbHMgd2VyZSBoaWdoZXIgb24gdGhlIHdlZWtlbmQgZGF5cy4gSSdtIG5vdCBjb252aW5jZWQgdGhlcmUgaXMgYSB3ZWVrZW5kIGVmZmVjdCBoZXJlISBBdCBsZWFzdCwgY2Fubm90IHNlZSBpdCBhcyBnbG9iYWwgZWZmZWN0LiBTdGlsbCB3b3J0aCBleHBsb3JpbmcgaWYgdGhlcmUgaXMgdGhpcyBmb3IgaW5kaXZpZHVhbCBob3VzZWhvbGRzLgoKIyMgdGltZSB4IHdlYXRoZXIKCiMjIyBtb250aCB+IHdlYXRoZXIKCmBgYHtyfQojIHNhbWUgdGltZSBmb3JtYXQgY2hhbmdlcyBhcyBpbiB0aGUgcHJvY2Vzc2VkIGhvdXNlaG9sZCBlbmVyZ3kgZGF0YSAoc2VlIHNjcmlwdCkKIyB1c2Ugd2VhdGhlciBvbmx5IGRmIGhlcmUgdG8gaGF2ZSBvbmUgcm93IHBlciBkYXksIG5vIHJlcGVhdHMgZm9yIGRpZmYgaG91c2Vob2xkcwpkYWlseV93ZWF0aGVyIDwtIGRhaWx5X3dlYXRoZXIgJT4lIAogIG11dGF0ZShtb250aCA9IG1vbnRoKGRhdGUsIGxhYmVsID0gVFJVRSksIC5hZnRlciA9IGRhdGUpICU+JSAKICBtdXRhdGUod2RheSA9IHdkYXkoZGF0ZSwgbGFiZWwgPSBUUlVFKSwgLmFmdGVyID0gbW9udGgpICU+JSAKICBtdXRhdGUod2Vla2VuZCA9IGlmX2Vsc2Uod2RheSAlaW4lIGMoIlNhdCIsICJTdW4iKSwgVCwgRiksIC5hZnRlciA9IHdkYXkpICU+JSAKICBtdXRhdGUocXVhcnRlciA9IHF1YXJ0ZXIoZGF0ZSwgdHlwZSA9ICJkYXRlX2ZpcnN0IiwgZmlzY2FsX3N0YXJ0ID0gMTIpLCAuYWZ0ZXIgPSBtb250aCkgJT4lIAogIG11dGF0ZSh5ZWFyc2Vhc29uID0gY2FzZV93aGVuKAogICAgcXVhcnRlciA9PSAiMjAxMS0wOS0wMSIgfiAiQXV0dW1uIDIwMTEiLAogICAgcXVhcnRlciA9PSAiMjAxMS0xMi0wMSIgfiAiV2ludGVyIDIwMTEiLAogICAgcXVhcnRlciA9PSAiMjAxMi0wMy0wMSIgfiAiU3ByaW5nIDIwMTIiLAogICAgcXVhcnRlciA9PSAiMjAxMi0wNi0wMSIgfiAiU3VtbWVyIDIwMTIiLAogICAgcXVhcnRlciA9PSAiMjAxMi0wOS0wMSIgfiAiQXV0dW1uIDIwMTIiLAogICAgcXVhcnRlciA9PSAiMjAxMi0xMi0wMSIgfiAiV2ludGVyIDIwMTIiLAogICAgcXVhcnRlciA9PSAiMjAxMy0wMy0wMSIgfiAiU3ByaW5nIDIwMTMiLAogICAgcXVhcnRlciA9PSAiMjAxMy0wNi0wMSIgfiAiU3VtbWVyIDIwMTMiLAogICAgcXVhcnRlciA9PSAiMjAxMy0wOS0wMSIgfiAiQXV0dW1uIDIwMTMiLAogICAgcXVhcnRlciA9PSAiMjAxMy0xMi0wMSIgfiAiV2ludGVyIDIwMTMiLAogICAgLmRlZmF1bHQgPSBOQV9jaGFyYWN0ZXJfCiAgKSwgLmFmdGVyID0gcXVhcnRlcikgJT4lIAogIG11dGF0ZSh5ZWFyc2Vhc29uID0gZmFjdG9yKHllYXJzZWFzb24sIGxldmVscyA9IGMoCiAgICAiQXV0dW1uIDIwMTEiLCAiV2ludGVyIDIwMTEiLCAiU3ByaW5nIDIwMTIiLCAiU3VtbWVyIDIwMTIiLAogICAgIkF1dHVtbiAyMDEyIiwgIldpbnRlciAyMDEyIiwgIlNwcmluZyAyMDEzIiwgIlN1bW1lciAyMDEzIiwKICAgICJBdXR1bW4gMjAxMyIsICJXaW50ZXIgMjAxMyIKICAgICkpKSAlPiUgCiAgbXV0YXRlKHNlYXNvbiA9IGNhc2Vfd2hlbigKICAgIHN0cl9kZXRlY3QoeWVhcnNlYXNvbiwgIldpbnRlciIpIH4gIldpbnRlciIsCiAgICBzdHJfZGV0ZWN0KHllYXJzZWFzb24sICJTdW1tZXIiKSB+ICJTdW1tZXIiLAogICAgc3RyX2RldGVjdCh5ZWFyc2Vhc29uLCAiU3ByaW5nfEF1dHVtbiIpIH4gIlNwcmluZy9BdXR1bW4iLAogICAgLmRlZmF1bHQgPSBOQV9jaGFyYWN0ZXJfCiAgKSwgLmFmdGVyID0gbW9udGgpCgpkYWlseV93ZWF0aGVyCmBgYAoKYGBge3J9CmRhaWx5X3dlYXRoZXIgJT4lIAogIGdncGxvdChhZXMoeCA9IG1vbnRoLCB5ID0gbWVhbl90ZW1wKSkgKwogIGdlb21fYm94cGxvdCgpCmBgYAoKU28gbWVhbiB0ZW1wZXJhdHVyZSBpcyBhIGZhY3RvciBvZiBtb250aCwgaGlnaGVyIHRlbXBzIGluIHN1bW1lciwgbG93ZXIgaW4gd2ludGVyLgoKQ291bGQgdXNlIEphbnVhcnkgYW5kIEp1bHkgb3IgRGVjLUZlYiBhbmQgSnVuZSAtIEF1ZyBhcyBzZXQgdGltZSBwZXJpb2RzIHRvIGxvb2sgYXQgaW5kaXZpZHVhbGx5CgpgYGB7cn0KIyBzdW5zaGluZQpkYWlseV93ZWF0aGVyICU+JSAKICBnZ3Bsb3QoYWVzKHggPSBtb250aCwgeSA9IHN1bnNoaW5lKSkgKwogIGdlb21fYm94cGxvdCgpCmBgYAoKU3Vuc2hpbmUgcmVsYXRpb25zaGlwIGlzIGxlc3MgY2xlYXJseSBieSBtb250aCAtIGFsdGhvdWdoIGxvd2VyIGluIERlYy9KYW4sICBoaWdoZXN0IGluIEp1bHkKCmBgYHtyfQpkYWlseV93ZWF0aGVyICU+JSAKICBnZ3Bsb3QoYWVzKHggPSBtb250aCwgeSA9IGdsb2JhbF9yYWRpYXRpb24pKSArCiAgZ2VvbV9ib3hwbG90KCkKYGBgCgpSYWRpYXRpb24gaXMgYSBmYWN0b3Igb2YgbW9udGggdG9vLCBzaW1pbGFyIHRvIHRlbXAKCmBgYHtyfQpkYWlseV93ZWF0aGVyICU+JSAKICBnZ3Bsb3QoYWVzKHggPSBtb250aCwgeSA9IGNsb3VkX2NvdmVyKSkgKwogIGdlb21fYm94cGxvdCgpCmBgYApMZXNzIGEgc2Vhc29uYWwgcGF0dGVybiwgbm90ZSBjbG91ZCBjb3ZlciBsb29rcyBsb3dlc3QgaW4gSnVseS9BdWcvU2VwdAoKYGBge3J9CmRhaWx5X3dlYXRoZXIgJT4lIAogIGZpbHRlcihzbm93X2RlcHRoID4gMCkgJT4lIAogIGdncGxvdChhZXMoeCA9IG1vbnRoLCB5ID0gc25vd19kZXB0aCkpICsKICBnZW9tX2JveHBsb3QoKQpgYGAKCk9ubHkgSmFuIGFuZCBGZWIgaGF2ZSBhbnkgc25vdywgbWF5YmUgbW9yZSBzbm93IGluIEphbiB0aGFuIEZlYgoKT25seSB1c2VmdWwgdG8gbG9vayBhdCBzbm93X0RlcHRoIH4ga3doIGluIEphbi9GZWIgbW9udGhzIC0gYnV0IGV2ZW4gZmlsdGVyaW5nIGZvciBvbmx5IGRheXMgd2l0aCBzb21lIHNub3cgLS0+IG5vIGNvcnJlbGF0aW9ucyB3aXRoIGtXaCAoc2UgYmxveHBsb3RzIGFib3ZlKQoKIyMjIHNlYXNvbiB+IHdlYXRoZXIKCmBgYHtyfQpkYWlseV93ZWF0aGVyICU+JSAKICBnZ3Bsb3QoYWVzKHggPSB5ZWFyc2Vhc29uLCB5ID0gbWVhbl90ZW1wKSkgKwogIGdlb21fYm94cGxvdCgpICsKICB0aGVtZShheGlzLnRleHQgPSBlbGVtZW50X3RleHQoYW5nbGUgPSA0NSkpCmBgYAoKYGBge3J9CmRhaWx5X3dlYXRoZXIgJT4lIAogIGdncGxvdChhZXMoeCA9IHNlYXNvbiwgeSA9IG1lYW5fdGVtcCkpICsKICBnZW9tX2JveHBsb3QoKQpgYGAKCkNsZWFyIHNlYXNvbmFsIHZhcmlhdGlvbiBpbiB0ZW1wZXJhdHVyZQoKYGBge3J9CmRhaWx5X3dlYXRoZXIgJT4lIAogIGdncGxvdChhZXMoeCA9IHllYXJzZWFzb24sIHkgPSBjbG91ZF9jb3ZlcikpICsKICBnZW9tX2JveHBsb3QoKSArCiAgdGhlbWUoYXhpcy50ZXh0ID0gZWxlbWVudF90ZXh0KGFuZ2xlID0gNDUpKQpgYGAKCkxlc3Mgb2J2aW91cyBkaWZmZXJlbmNlcywgc2VlIGxvd2VzdCBjbG91ZF9jb3ZlciBpbiBTdW1tZXIgMjAxMwoKYGBge3J9CmRhaWx5X3dlYXRoZXIgJT4lIAogIGdncGxvdChhZXMoeCA9IHllYXJzZWFzb24sIHkgPSBzdW5zaGluZSkpICsKICBnZW9tX2JveHBsb3QoKSArCiAgdGhlbWUoYXhpcy50ZXh0ID0gZWxlbWVudF90ZXh0KGFuZ2xlID0gNDUpKQpgYGAKCkdlbmVyYWxseSBoaWdoZXIgaW4gc3VtbWVyLCBsb3dlciBpbiB3aW50ZXIsIGJ1dCB2YXJpYWJsZSAoZWcgc3ByaW5nIDIwMTIgPT0gc3VtbWVyIDIwMTIsIFdpbnRlciAyMDEyIHBhcnRpY3VsYXJseSBsb3cpCgpgYGB7cn0KZGFpbHlfd2VhdGhlciAlPiUgCiAgZ2dwbG90KGFlcyh4ID0geWVhcnNlYXNvbiwgeSA9IGdsb2JhbF9yYWRpYXRpb24pKSArCiAgZ2VvbV9ib3hwbG90KCkgKwogIHRoZW1lKGF4aXMudGV4dCA9IGVsZW1lbnRfdGV4dChhbmdsZSA9IDQ1KSkKYGBgCgpWZXJ5IGNsZWFyIHNlYXNvbmFsIHZhcmlhdGlvbiBpbiByYWRpYXRpb24sIGhpZ2hlciBpbiBzcHJpbmcvc3VtbWVyLCBsb3dlciBpbiBhdXR1bW4vd2ludGVyCgoKU3VtbWFyeSBvZiBzZWFzb25hbCBlZmZlY3RzOgoKKiB0ZW1wZXJhdHVyZSAtIHllcywgdmVyeSBjbGVhciwgc3VtbWVyIGhpZ2gsIHdpbnRlciBsb3cKKiBjbG91ZF9jb3ZlciAtIG5vdCBjbGVhcmx5LCBidXQgZGlwIGluIHN1bW1lciAyMDEzCiogc3Vuc2hpbmUgLSB5ZXMsIGJ1dCB2YXJpZXMgeWVhciBvbiB5ZWFyCiogZ2xvYmFsX3JhZGlhdGlvbiAtIHllcywgdmVyeSBjbGVhciwgc3ByaW5nL3N1bW1lciBoaWdoLCBhdXR1bW4vd2ludGVyIGxvdwoKCiMjIyB3ZWVrZGF5IHR5cGUgfiB3ZWF0aGVyCgpBc3N1bWUgaXQncyBub3QgcmVsYXRlZAoKYGBge3J9CmRhaWx5X3dlYXRoZXIgJT4lIAogIGdncGxvdChhZXMoeCA9IHdlZWtlbmQsIHkgPSBtZWFuX3RlbXApKSArCiAgZ2VvbV9ib3hwbG90KCkKYGBgCgpgYGB7cn0KZGFpbHlfd2VhdGhlciAlPiUgCiAgZ2dwbG90KGFlcyh4ID0gd2Vla2VuZCwgeSA9IGdsb2JhbF9yYWRpYXRpb24pKSArCiAgZ2VvbV9ib3hwbG90KCkKYGBgCgpgYGB7cn0KZGFpbHlfd2VhdGhlciAlPiUgCiAgZ2dwbG90KGFlcyh4ID0gd2Vla2VuZCwgeSA9IHN1bnNoaW5lKSkgKwogIGdlb21fYm94cGxvdCgpCmBgYAoKYGBge3J9CmRhaWx5X3dlYXRoZXIgJT4lIAogIGdncGxvdChhZXMoeCA9IHdlZWtlbmQsIHkgPSBjbG91ZF9jb3ZlcikpICsKICBnZW9tX2JveHBsb3QoKQpgYGAKCkNsZWFybHkgbm8gcmVsYXRpb25zaGlwIGJldHdlZW4gd2VhdGhlciBhbmQgd2Vla2RheSB0eXBlICh3ZWVrZW5kIG9yIG5vdCkuCgojIyBzdW1tYXJ5IG9mIHByZWRpY3RvcnMgdG8gY29uc2lkZXIKCldlYXRoZXIgdmFsdWVzIHRvIGNvbnNpZGVyOgoKKiB0ZW1wICh1c2UgbWVhbiwgZHJvcCBtaW4vbWF4KQoqIHN1bnNoaW5lIGhvdXJzICh1c2UgaW5zdGVhZCBvZiByYWRpYXRpb24gb3IgY2xvdWRfY292ZXIgKGFsaWFzZXMpOyBjaGVjayBjb3JyIHdpdGggbW9udGggdG9vIGFuZCBiZXdhcmUpCgpEcm9wIHByZXNzdXJlLCBwcmVjaXBpdGF0aW9uCgpOb3RlIGxvdHMgb2YgZmFjdG9ycyBhcmUgaW50ZXItcmVsYXRlZCwgdGhlc2UgYXJlICoqbm90IGluZGVwZW5kZW50IHZhcmlhYmxlcyoqLiAKClBvdGVudGlhbCBhbGlhc2VzIHdpdGggZGF0ZSAvIG1vbnRoIC8gc2Vhc29uOgoKKiB0ZW1wZXJhdHVyZSBhbmQgcmFkaWF0aW9uIC0gY2xlYXIgc2Vhc29uYWwgcGF0dGVybiwgbW9udGgtYnktbW9udGgKKiBtYXliZSBzdW5zaGluZSAtIGJ1dCBsZXNzIGRpc3RpbmN0CiogY2xvdWRfY292ZXIgbG93ZXN0IGluIEp1bC9BdWcgLSBsZXNzIG9mIGEgdHJhbnNpdGlvbmFsIHBhdHRlcm4gdGhvdWdoCiogc25vdyBvbmx5IGhhcHBlbnMgaW4gSmFuL0ZlYgoKVXNlIHRoZXNlIGFzIGRlc2NyaXB0aXZlIGVsZW1lbnRzIGFib3V0IGVuZXJneSB1c2UgLSBvbmx5IGZhY3RvciBpbiB0ZW1wIGFuZCBzdW5zaGluZSBob3VycyBpbiBwb3RlbnRpYWwgbW9kZWxzIC0tIGF2b2lkIGFsaWFzaW5nIHdpdGggbW9udGgKClRpbWUgZmFjdG9ycyBhcyBwcmVkaWN0b3M6CgoqIG1vbnRoIG9yIHNlYXNvbiwgaWYgbm90IHVzaW5nIHdlYXRoZXIgZmFjdG9ycwoqIHdlZWtkYXkgdHllcCAod2Vla2VuZCBUL0YpIC0gdG8gc2VlIGlmIGluZGl2aWR1YWwgaG91c2Vob2xkcyBjaGFuZ2Ugc2NoZWR1bGVzCgojIyB3b3JrIG91dCBwcmVkaWN0b3JzIHRoYXQgc3VtbWFyaXNlIGhvdXNlaG9sZCBiZWhhdmlvdXIKCldlYXRoZXIgdmFsdWVzIHRvIGNvbnNpZGVyOgoKKiBtZWFuX3RlbXAKKiBzdW5zaGluZQoKQnV0IGJld2FyZSBzZWFzb25hbCByZWxhdGlvbnNoaXAuIENhbiBpbmNsdWRlIHdpdGggd2Vla2VuZCB5L24sIG5vdCB3aXRoIG1vbnRoLgoKU28gY2FuIHRyeToKCiogeWVhci1yb3VuZCBwcmVkaWN0b3JzIHdpdGggdGVtcCwgc3Vuc2hpbmUsIHdlZWtlbmQgT1IgbW9udGgsIHdlZWtlbmQKKiBvciBkbyB3aW50ZXItb25seSBtb2RlbCwgc3VtbWVyLW9ubHkgbW9kZWxzIC0gYW5kIGRvbid0IGluY2x1ZGUgbW9udGgKCi0tPiBtYWtlIHByZWRpY3RvcnMgdGhhdCBjb3ZlciBib3RoIHNjZW5hcmlvcyAoZS5nLiB3aW50ZXIgdmFyaWF0aW9uKQoKVHJ5IHRvIHJlZHVjZSB0byAxIHJvdyBwZXIgaG91c2Vob2xkLCB3aXRoIGNhbGN1bGF0ZWQgdmFyaWFibGVzIGV4cGxhaW5pbmcgcmVsYXRpb25zaGlwIHdpdGggdGhlc2UgcHJlZGljdG9ycwoKZS5nLiBmaW5kIHNsb3BlIGZyb20gaGlnaCB0byBsb3cgd2VhdGhlciB2YWx1ZSwgYW5kIGxvb2sgYXQgY2hhbmdlIGluIGt3aCAoYXMgJSBjaGFuZ2U/KQoKaS5lLiBmaW5kIHRoZSBjb2VmZmljaWVudHMgZm9yIGxtIHBlciBob3VzZWhvbGQ/IEhhdmUgYSBsb29rIGF0IGEgZmV3IGluZGl2aWR1YWwgaG91c2Vob2xkcy4uLgoKU2ltcGxlcjogCgoqIG1lYW4vbWVkaWFuKHdpbnRlciAyMDEzICgtLT4gRmViIDIwMTQpKQoqIG1lYW4vbWVkaWFuKHN1bW1lciAyMDEzKQoqIG1lYW4vbWVkaWFuKEp1bHkgMjAxMykgLSBhcyBtb3N0IHJlY2VudCAoYW5kIG1vc3QgbnVtYmVyIGhvdXNlaG9sZHMpCiogbWVhbi9tZWRpYW4oSmFudWFyeSAyMDE0KSAtIGFzIG1vc3QgcmVjZW50IChhbmQgbW9zdCBudW1iZXIgaG91c2Vob2xkcykKKiBtZWFuKHN1bW1lcikgLSBtZWFuKHdpbnRlcikga3doIGFzIHN1bW1lci93aW50ZXIgZGlmZmVyZW5jZSAKKiBtYXgod2ludGVyKSAtIG1pbih3aW50ZXIpIGFzIHdpdGhpbi13aW50ZXIgdmFyaWF0aW9uIChvciBpcXIpCiogbWF4KHN1bW1lcikgLSBtaW4oc3VtbWVyKSBhcyB3aXRoaW4tc3VtbWVyIHZhcmlhdGlvbiAob3IgaXFyKQoqIG1lYW4gb2YgdG9wIDEwIGhpZ2hlc3Qga3doIC0tIGhlbHBzIHJlZHVjZSBlZmZlY3Qgb2YgYW55IHJlYWxseSBiaWcgdmFsdWVzCiogbWVhbiBvZiBib3R0b20gMTAgbm9uLXplcm8ga3doIC0tIGZpbHRlciBvdXQgMHMgZmlyc3QKKiBudW1iZXIgcmVjb3JkZWQgZGF5cyAoc28gY2FuIGVsaW1pbmF0ZSBpZiBuZWVkZWQpCiogJSByZWNvcmRlZCBkYXlzIHdpdGggMCBrV2ggKHNvIGNhbiBlbGltaW5hdGUgaWYgbmVlZGVkKQoqICUgcmVjb3JkZWQgZGF5cyB3aXRoID4xNTAga1doIChlLmcuKQoqIHJlbGF0aXZlIHdpbnRlciB3ZWVrZW5kIGRpZmYgKCUgY2hhbmdlKTogMTAwICogYXZnKHdlZWtlbmRUd2ludGVyKSAtIGF2Zyh3ZWVrZW5kRndpbnRlcikgLyBhdmcod2ludGVyKSAtLSBvciB1c2Ugc2Qgb3IgaXFyCiogcmVsYXRpdmUgc3VtbWVyIHdlZWtlbmQgZGlmZjogMTAwICogYXZnKHdlZWtlbmRUd2ludGVyKSAtIGF2Zyh3ZWVrZW5kRndpbnRlcikgLyBhdmcoc3VtbWVyKSAtLSBvciB1c2Ugc2Qgb3IgaXFyCiogc29tZXRoaW5nIHRvIGRvIHdpdGggdGVtcCAtLSBub3RlIHBvdGVudGlhbCBhbGlhcyB3aXRoIHdpbnRlci9zdW1tZXIgdGhpbmdzCiogc29tZXRoaW5nIHRvIGRvIHdpdGggc3Vuc2hpbmUgLS0gbm90ZSBwb3RlbnRpYWwgYWxpYXMgd2l0aCB3aW50ZXIvc3VtbWVyIHRoaW5ncwoKVG8gYWlkIGluIGNvbG91cmluZyBwbG90cyBmb3IgZXhwbG9yYXRpb24sIGJ1dCBub3QgZm9yIGNsdXN0ZXJpbmc6CgoqIGxhYmVsIGhvdXNlaG9sZHMgd2l0aCBhbnkga1doIGRheXMgPiAxNTAgKGUuZy4pIGFzIGhpZ2ggdXNlcnMgLS0gZm9yIGNvbG91cmluZyBwbG90cyBsYXRlcgoqIGxhYmVsIGhvdXNlaG9sZHMgYXMgaGlnaC9hdmVyYWdlL2xvdyBhcyB0byBob3cgdGhlaXIgbWVkaWFuIGt3aCBmYWxscyBpbiB3aXRoIHNhbXBsZSBtZWRpYW4gLS0gZS5nLiB1c2UgMC0xMCUsIDEwLTIwJSwyMC01MCUsIDUwLTgwJSwgODAtOTAlLCA5MC0xMDAlIGRlY2lsZXMKKiBsYWJlbCBob3VzZWhvbGRzIHdpdGggYW55IGtXaCA9IDAgZGF5cwoKSW5zdGVhZCBvZiB3aW50ZXIvc3VtbWVyLCBjb3VsZCB1c2UgSmFuL0p1bHkgLS0gYnV0IGZpZ3VyZSB0aGF0IGVuZXJneSBwYXR0ZXJuIGlzIGxpa2VseSByZWxhdGVkIHRvIHdoZW4gcGVvcGxlIHN3aXRjaCBvbiBoZWF0aW5nIHNjaGVkdWxlcyBhZ2FpbiwgYW5kIHRoaXMgaXMgcHJvYmFibHkgbW9yZSByZWxldmFudCB0byB3aW50ZXIvc3VtbWVyIHJhdGhlciB0aGFuIG9uZSBtb250aCwgYWxzbyB1c2luZyBvbmx5IG9uZSBtb250aCByZWR1Y2VzIHRoZSBzaXplIG9mIHRoZSBkYXRhIGF2YWlsYWJsZS4gQ291bGQgaW5jbHVkZSBib3RoIHdheXMgYW5kIHNlZSB3aGljaCBzZWVtIHRvIGhhdmUgc3Ryb25nZXN0IGNvcnJlbGF0aW9ucy4KClVzZSAyMDEzLzIwMTQgc2Vhc29ucy9tb250aHMgYXMgbW9zdCByZWNlbnQgb25lcyAoU3VtbWVyIDIwMTMsIEp1bHkgMjAxMywgV2ludGVyIDIwMTMsIEphbnVhcnkgMjAxNCksIHdpdGggbW9zdCBudW1iZXIgb2YgaG91c2Vob2xkcy4gQ2xlYW5lc3QgZGF0YSBpbiB0ZXJtcyBvZiBob3VzZWhvbGQgYmVoYXZpb3VyIHBhdHRlcm4gLSBhdm9pZHMgcG90ZW50aWFsIGZvciBkaWZmZXJpbmcgYmVoYXZpb3VyIHllYXItb24teWVhci4gCgojIyBQb3NzaWJsZSBjbHVzdGVycwoKSW4gc3VtbWFyeSwgbG9vayBvdXQgZm9yOgoKKiBoaWdoIGVuZXJneSBjb25zdW1wdGlvbiBhdCBsb3dlciB0ZW1wZXJhdHVyZXMgKGkuZS4gPj0xNTAga1doIGF0IDwgMTMgZGVncmVlcyBDKQoqIGhpZ2ggZW5lcmd5IGNvbnN1bXB0aW9uIGF0IGxvdyBzdW5zaGluZSBob3VycyAtIGJlYXIgaW4gbWluZCByZWxhdGlvbnNoaXAgdG8gc2Vhc29uCiogc2FtZSBmb3IgcmFkaWF0aW9uCgpMb29rIGF0IHRoZSB+MjAgaG91c2Vob2xkcyB3aXRoIGt3aCB2YWx1ZXMgaGlnaGVyIHRoYW4gMTUwIGtXaCAtLSBtb2RlbCB0aGVzZSBpbmRpdmlkdWFsbHk/CgpUaGluayBhYm91dCB1c2VyIGJlaGF2aW91cjogZG8gcGVvcGxlIGFkanVzdCB0aGVpciBoZWF0aW5nIGFjY29yZGluZyB0byBkYWlseSB0ZW1wPyBPciBkbyB0aGV5IHR1cm4gaXQgb24gd2hlbiBpdCBnZXRzIHRvIGNvbGRlciBtb250aHMsIGFuZCBsZWF2ZSBpdCBvbiB1bnRpbCBpdCdzIHNwcmluZyBhZ2FpbiAtIGkuZS4gbW9udGggYW5kIHdlZWtlbmQvd2Vla2RheSBpcyBtb3JlIHVzZWZ1bCBhcyBhIHBhdHRlcm4gb2YgaGVhdGluZyBzY2hlZHVsZXMKCkFsc28gbG9vayBmb3IgaG91c2Vob2xkcyB3aG9lc2Uga3doIGRyb3BzIG9uIHN1bm55IGRheXMgKGxvdyBjbG91ZCBjb3ZlciwgaGlnaCBzdW5zaGluZSBob3VycywgaGlnaCByYWRpYXRpb24pIC0gdG8gc3BvdCB0aG9zZSB3aXRoIHNvbGFyIHBhbmVscz8KCgo=</div>
 
 
 
