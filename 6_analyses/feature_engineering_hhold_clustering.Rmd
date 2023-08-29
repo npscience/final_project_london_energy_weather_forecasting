@@ -1,0 +1,998 @@
+---
+title: "Feature engineering - summarise each household for modelling"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+joined_all <- read_csv("../4_cleaned_data/daily_energy_weather_all.csv") %>% 
+  mutate(yearseason = factor(yearseason, levels = c(
+    "Autumn 2011", "Winter 2011", "Spring 2012", "Summer 2012",
+    "Autumn 2012", "Winter 2012", "Spring 2013", "Summer 2013",
+    "Autumn 2013", "Winter 2013"
+  )))
+```
+
+```{r}
+summary(joined_all)
+```
+
+```{r}
+joined_all %>% 
+  distinct(lc_lid)
+```
+
+All 5,566 households. Remember some have very few data points, some have lots of zero values. <- include these measures in summary df so can eliminate based on rules.
+
+```{r}
+hhold_summary <- joined_all %>% 
+  mutate(zero_kwh = if_else(kwh == 0, T, F),
+         gt150_kwh = if_else(kwh >= 150, T, F)) %>% 
+  group_by(lc_lid) %>%
+  summarise(num_values = n(),
+            num_zeros = sum(zero_kwh),
+            num_gt150 = sum(gt150_kwh),
+            min_value = min(kwh),
+            max_value = max(kwh),
+            range = (max(kwh) - min(kwh)),
+            median_kwh = median(kwh),
+            iqr = IQR(kwh),
+            mean_kwh = mean(kwh),
+            sd = sd(kwh)) %>% 
+  mutate(pc_missing_days = (100 * (total_days - num_values) / total_days),
+         pc_zero_values = (100 * num_zeros / num_values),
+         pc_gt150 = (100 * num_gt150 / num_values)) %>% 
+  ungroup() %>% 
+  mutate(has_zeros = if_else(pc_zero_values > 0, T, F),
+         has_150kwh = if_else(pc_gt150 > 0, T, F))
+```
+
+
+```{r}
+hhold_summary %>% 
+  filter(min_value > 0) %>% 
+  arrange(min_value)
+```
+
+Summary:
+
+* 22 hholds have at least 1 day with at least 150kWh recorded energy consumption (v small % of the sample)
+* 282 hholds have at least 1 day with 0 kWh recorded
+* 74 hholds have at least 10% of their recorded values at 0 kWh
+* the highest daily value recorded was 332.556 kWh for household MAC002670
+* the 1000 lowest minimum values that were not 0 kWh were all < 0.1 kWh -- note lots but out of 3.5 million observations
+
+### Seasonal subset (summer + winter 2013)
+
+```{r}
+joined_all %>% 
+  group_by(yearseason, lc_lid) %>% 
+  summarise(count = n()) %>% 
+  ungroup() %>% 
+  group_by(yearseason) %>% 
+  summarise(num_hh = n(),
+            sum_values = sum(count),
+            min_hh = min(count),
+            max_hh = max(count)) %>% 
+  arrange(yearseason)
+```
+
+Summer 2013 has 5,445 households - at least one with only 1 day counted
+Winter 2013 has 5,134 households - at least one with only 2 days counted
+
+Do I need to make a subset of these? i.e. keep only households with >=49 (7 weeks') values in both summer and winter 2013
+
+```{r}
+# find number of total days in each Winter and Summer 2013
+total_days_summer2013 <- joined_all %>% 
+  filter(yearseason == "Summer 2013") %>% 
+  distinct(date) %>% 
+  nrow()
+
+total_days_winter2013 <- joined_all %>% 
+  filter(yearseason == "Winter 2013") %>% 
+  distinct(date) %>% 
+  nrow()
+
+total_days_summer2013
+total_days_winter2013
+```
+
+So max number values is 92 days in summer 2013, 89 days in winter 2013
+
+Cutoff for including a household? What's the minimum number days we need to understand the summary metrics? What looks reasonable from viz?
+
+```{r}
+joined_all %>% 
+  filter(yearseason %in% c("Summer 2013", "Winter 2013")) %>% 
+  group_by(lc_lid, yearseason) %>% 
+  summarise(num_values = n()) %>% 
+  ggplot() +
+  geom_histogram(aes(x = num_values, fill = yearseason), bins = 9, show.legend = FALSE) +
+  facet_wrap( ~ yearseason, ncol = 1)
+```
+
+Most households have most of the days recorded
+
+```{r}
+# zoom in on < 80
+joined_all %>% 
+  filter(yearseason %in% c("Summer 2013", "Winter 2013")) %>% 
+  group_by(lc_lid, yearseason) %>% 
+  summarise(num_values = n()) %>% 
+  filter(num_values < 80) %>% 
+  ggplot() +
+  geom_histogram(aes(x = num_values, fill = yearseason), bins = 40, show.legend = FALSE) +
+  facet_wrap( ~ yearseason, ncol = 1)
+```
+
+~75 would pick up the top end of this plot
+
+```{r}
+75/92
+75/89
+```
+
+Or 85% of the timeframe
+
+```{r}
+0.85*total_days_summer2013
+0.85*total_days_winter2013
+```
+
+Let's say 77 days (11 weeks) (~85% of each season)
+
+```{r}
+threshold <- 77 # minimum num values per season
+
+# list hholds to include
+winter_summer_2013_hholds <- joined_all %>% 
+  group_by(yearseason, lc_lid) %>% 
+  summarise(count = n()) %>% 
+  ungroup() %>% 
+  filter(yearseason %in% c("Summer 2013", "Winter 2013")) %>% 
+  # keep only hholds with >x values in each season
+  filter(count >= threshold) %>% 
+  group_by(lc_lid) %>% 
+  # find which households in both seasons
+  summarise(num_seasons = n()) %>% # 5283 households in either
+  filter(num_seasons == 2) %>%  # 4999 households in both
+  pull(lc_lid)
+
+joined_all %>% 
+  filter(lc_lid %in% winter_summer_2013_hholds) %>% 
+  filter(yearseason %in% c("Summer 2013", "Winter 2013")) %>% 
+  group_by(yearseason, lc_lid) %>% 
+  summarise(count = n()) %>% 
+  ungroup() %>% 
+  group_by(yearseason) %>% 
+  summarise(num_hh = n())
+```
+
+n = 4,999 households in each season
+
+### check for hhold stats & zero values
+
+How have hhold stats changed by filtering for Summer / Winter 2013 only?
+
+```{r}
+summer_winter2013 <- joined_all %>% 
+  filter(yearseason %in% c("Summer 2013", "Winter 2013"),
+         lc_lid %in% winter_summer_2013_hholds)
+
+summer_winter2013
+```
+
+```{r}
+hhold_stats_sw2013 <- summer_winter2013 %>% 
+  mutate(zero_kwh = if_else(kwh == 0, T, F),
+         gt150_kwh = if_else(kwh >= 150, T, F)) %>% 
+  group_by(lc_lid, yearseason) %>%
+  summarise(num_values = n(),
+            num_zeros = sum(zero_kwh),
+            num_gt150 = sum(gt150_kwh),
+            min_value = min(kwh),
+            max_value = max(kwh),
+            range = (max(kwh) - min(kwh)),
+            median_kwh = median(kwh),
+            iqr = IQR(kwh),
+            mean_kwh = mean(kwh),
+            sd = sd(kwh)) %>% 
+  mutate(pc_missing_days = (100 * (total_days - num_values) / total_days),
+         pc_zero_values = (100 * num_zeros / num_values),
+         pc_gt150 = (100 * num_gt150 / num_values)) %>% 
+  ungroup() %>% 
+  mutate(has_zeros = if_else(pc_zero_values > 0, T, F),
+         has_150kwh = if_else(pc_gt150 > 0, T, F))
+
+hhold_stats_sw2013
+```
+
+```{r}
+# check for zero values
+hhold_stats_sw2013 %>% 
+  filter(has_zeros) %>% 
+  ggplot() +
+  geom_histogram(aes(x = pc_zero_values, fill = yearseason), bins = 50) +
+  facet_wrap(~ yearseason, ncol = 1)
+```
+
+```{r}
+# check for high values
+hhold_stats_sw2013 %>% 
+  filter(has_150kwh) %>% 
+  ggplot() +
+  geom_histogram(aes(x = pc_gt150, fill = yearseason), bins = 50) +
+  facet_wrap(~ yearseason, ncol = 1)
+```
+
+* 80 hholds with zero values - some with all 181 days. _Do I leave these in?? Beware of dividing by 0_
+* 4 households with values higher than 150 kWh -- _Does limiting to summer/winter 2013 take out patterns I saw in exploration?_
+
+## Variable reduction
+
+Use summer and winter 2013 subset, with the 4,999 households with enough values in these seasons
+
+Reduce to 1 row per hhold with key features
+
+```{r}
+wide <- summer_winter2013 %>% 
+  group_by(lc_lid, yearseason) %>% 
+  mutate(seasonal_mean_kwh = mean(kwh)) %>% 
+  ungroup() %>% 
+  group_by(lc_lid, month) %>% 
+  mutate(month_mean_kwh = mean(kwh)) %>%  # note this is each month in s/w 2013 only because filtered df
+  ungroup()
+
+wide
+```
+
+```{r}
+summer_mean <- summer_winter2013 %>% 
+  filter(yearseason == "Summer 2013") %>% 
+  group_by(lc_lid) %>% 
+  mutate(summer_mean_kwh = mean(kwh)) %>%
+  ungroup() %>% 
+  select(lc_lid, summer_mean_kwh) %>% 
+  unique()
+
+winter_mean <- summer_winter2013 %>% 
+  filter(yearseason == "Winter 2013") %>% 
+  group_by(lc_lid) %>% 
+  mutate(winter_mean_kwh = mean(kwh)) %>%
+  ungroup() %>% 
+  select(lc_lid, winter_mean_kwh) %>% 
+  unique()
+
+summer_variance <- summer_winter2013 %>% 
+  filter(yearseason == "Summer 2013") %>% 
+  group_by(lc_lid) %>% 
+  mutate(summer_sd = sd(kwh)) %>%
+  ungroup() %>% 
+  select(lc_lid, summer_sd) %>% 
+  unique()
+
+winter_variance <- summer_winter2013 %>% 
+  filter(yearseason == "Winter 2013") %>% 
+  group_by(lc_lid) %>% 
+  mutate(winter_sd = sd(kwh)) %>%
+  ungroup() %>% 
+  select(lc_lid, winter_sd) %>% 
+  unique()
+
+winter_weekend_mean <- summer_winter2013 %>% 
+  filter(yearseason == "Winter 2013" & weekend) %>% 
+  group_by(lc_lid) %>% 
+  mutate(winter_wkend_mean = mean(kwh)) %>%
+  ungroup() %>% 
+  select(lc_lid, winter_wkend_mean) %>% 
+  unique()
+
+winter_weekday_mean <- summer_winter2013 %>% 
+  filter(yearseason == "Winter 2013" & !weekend) %>% 
+  group_by(lc_lid) %>% 
+  mutate(winter_wkday_mean = mean(kwh)) %>%
+  ungroup() %>% 
+  select(lc_lid, winter_wkday_mean) %>% 
+  unique()
+
+summer_weekend_mean <- summer_winter2013 %>% 
+  filter(yearseason == "Summer 2013" & weekend) %>% 
+  group_by(lc_lid) %>% 
+  mutate(summer_wkend_mean = mean(kwh)) %>%
+  ungroup() %>% 
+  select(lc_lid, summer_wkend_mean) %>% 
+  unique()
+
+summer_weekday_mean <- summer_winter2013 %>% 
+  filter(yearseason == "Summer 2013" & !weekend) %>% 
+  group_by(lc_lid) %>% 
+  mutate(summer_wkday_mean = mean(kwh)) %>%
+  ungroup() %>% 
+  select(lc_lid, summer_wkday_mean) %>% 
+  unique()
+```
+
+```{r}
+summer_wkend_chg <- left_join(summer_weekend_mean, summer_weekday_mean) %>% 
+  mutate(summer_wkend_pc_change = (100 * (summer_wkend_mean - summer_wkday_mean) / summer_wkday_mean))
+
+summer_wkend_chg %>% 
+  ggplot() +
+  geom_histogram(aes(x = summer_wkend_pc_change), bins = 30)
+
+summer_wkend_chg %>% 
+  filter(summer_wkend_pc_change > 200)
+```
+
+1 household with very extreme value here, causes by change between two very small values
+
+**Infer change = 0 if comparator mean values both < 0.5 kWh**
+
+```{r}
+summer_wkend_chg <- left_join(summer_weekend_mean, summer_weekday_mean) %>% 
+  mutate(summer_wkend_pc_change = if_else(
+    summer_wkend_mean < 0.5 & summer_wkday_mean < 0.5, 0,
+    (100 * (summer_wkend_mean - summer_wkday_mean) / summer_wkday_mean)))
+
+summer_wkend_chg %>%
+  filter(summer_wkend_mean < 0.5 & summer_wkday_mean < 0.5)
+  # filter(summer_wkend_pc_change == 0) 
+  # all 0 values are inferred, this has inferred 21 zeros, minimal disruption out of 4,999 households
+
+summer_wkend_chg %>% 
+  ggplot() +
+  geom_histogram(aes(x = summer_wkend_pc_change), bins = 30)
+# nice distribution
+```
+
+```{r}
+winter_wkend_chg <- left_join(winter_weekend_mean, winter_weekday_mean) %>% 
+  mutate(winter_wkend_pc_change = if_else(
+    winter_wkend_mean < 0.5 & winter_wkday_mean < 0.5, 0,
+    (100 * (winter_wkend_mean - winter_wkday_mean) / winter_wkday_mean)))
+
+winter_wkend_chg %>%
+  filter(winter_wkend_mean < 0.5 & winter_wkday_mean < 0.5)
+  #filter(winter_wkend_pc_change == 0) 
+  # All 21 zero values are inferred, minimal disruption out of 4,999 households
+
+winter_wkend_chg %>% 
+  ggplot() +
+  geom_histogram(aes(x = winter_wkend_pc_change), bins = 30)
+# also nice distribution
+```
+
+
+```{r}
+colnames(summer_winter2013)
+```
+* relative winter weekend diff (% change): 100 * avg(weekendTwinter) - avg(weekendFwinter) / avg(winter) -- or use sd or iqr
+* relative summer weekend diff: 100 * avg(weekendTwinter) - avg(weekendFwinter) / avg(summer) -- or use sd or iqr
+
+```{r}
+# build summary table, type of join doesn't matter
+df <- inner_join(summer_mean, summer_variance) %>% 
+  inner_join(winter_mean) %>% 
+  inner_join(winter_variance) %>% 
+  inner_join(summer_wkend_chg) %>% 
+  inner_join(winter_wkend_chg) %>% 
+  mutate(winter_pc_change = 100 * (winter_mean_kwh - summer_mean_kwh) / summer_mean_kwh,
+         seasonal_rel_chg_in_sd = winter_sd / summer_sd)
+  
+v_low_hhs <- df %>%
+  filter(winter_mean_kwh < 0.5 & summer_mean_kwh < 0.5) %>%  # 11 households with both < 0.5
+  pull(lc_lid)
+  # filter(winter_mean_kwh < 0.5) # 22 households with < 0.5 in winter
+  # filter(summer_mean_kwh < 0.5) # 22 households with < 0.5 in summer
+
+df_clean <- df %>% 
+  filter(!lc_lid %in% v_low_hhs)
+
+df_trim <- df_clean %>% 
+  select(-c(summer_mean_kwh, summer_wkend_mean, summer_wkday_mean, winter_wkend_mean, winter_wkday_mean, winter_sd, summer_sd))
+  
+df_trim # 4,988 households
+```
+
+Remaining feature engineering to do, from weather_data_exploration (heading: "work out predictors...")
+
+* something to do with temp -- note potential alias with winter/summer things
+* something to do with sunshine -- note potential alias with winter/summer things
+* mean of top 10 highest kwh -- helps reduce effect of any really big values
+
+* mean/median(July 2013) - as most recent (and most number households)
+* mean/median(January 2014) - as most recent (and most number households)
+* mean of bottom 10 non-zero kwh -- filter out 0s first
+
+* label households as high/average/low as to how their median kwh falls in with sample median -- e.g. use 0-10%, 10-20%,20-50%, 50-80%, 80-90%, 90-100% deciles
+
+# Clustering
+
+Unsupervised, try:
+
+* K-means
+* DB-SCAN
+
+See clustering: 
+https://towardsdatascience.com/the-5-clustering-algorithms-data-scientists-need-to-know-a36d136ef68 for more info.
+
+## K means clustering
+
+```{r}
+# columns for clustering, removed aliased
+colnames(df_trim)
+```
+
+
+Steps for K-means:
+
+1. Have named rows
+2. Scale data
+3. Understand correlations between vars (remember no outcome var here) to help us understand our data
+4. Do k-means clustering and find which clusters each row belong to
+5. Do k-means clustering for range of k values and find out which number of clusters best fits the data (according to different methods)
+6. Plot the data and colour by cluster to visualise
+
+```{r}
+library(cluster)
+library(factoextra)
+library(dendextend)
+library(corrplot)
+```
+
+
+```{r}
+# prep data for clustering
+df_cluster <- df_trim %>% 
+  # name the rows with household id
+  column_to_rownames("lc_lid") %>% 
+  # scale the data (normal around mean, sd 0,1)
+  mutate(across(where(is.numeric), scale))
+
+df_cluster
+```
+
+```{r}
+# old df, now update, do no re-run this!
+# look at correlations
+corrplot(cor(df_cluster), method = "number", type = "lower")
+```
+
+Notes:
+
+Two main correlations now are:
+
+* 0.94 winter_pc_change & seasonal_rel_chg_in_sd - i.e. households that change in winter, and change across seasons
+* 0.58 summer_wkend_pc_change & winter_wkend_pc_change - i.e. households that change by weekday type in both seasons
+
+From previous df_cluster before further cleaning
+
+* winter weekend mean is highly correlated (0.99) with winter mean (and is related - winter mean includes weekend values!) _<-- might need to remove wkend mean values, keep only pc change_
+* several correlations above 0.65:
+  * 0.77 summer and winter weekend means
+  * 0.76 winter mean & summer wkend mean
+  * 0.74 winter mean & winter sd
+  * 0.73 seasonal wkend means & seasonal sds _<- again not independent from each other! may need to reduce to winter sd/summer sd for example_
+  * 0.69 winter sd & summer sd
+
+### First, visualize these corrs
+
+```{r}
+colnames(df_clean) # with all the columns still
+```
+
+```{r}
+df_clean %>% 
+  filter(seasonal_rel_chg_in_sd < 100) %>% # zoom in!
+  ggplot() +
+  geom_point(aes(x = winter_pc_change, y = seasonal_rel_chg_in_sd))
+```
+
+Note there are some extreme values for both x and y, zooming in by filtering for lower seasonal sd change --> still see a positive correlation
+
+Look at scaled values:
+
+```{r}
+df_cluster %>% 
+  filter(seasonal_rel_chg_in_sd < 1) %>% # still need to zoom in, extreme values are now ~60
+  ggplot() +
+  geom_point(aes(x = winter_pc_change, y = seasonal_rel_chg_in_sd))
+```
+
+```{r}
+df_clean %>% 
+  ggplot() +
+  geom_point(aes(x = summer_wkend_pc_change, y = winter_wkend_pc_change))
+```
+
+```{r}
+df_clean %>% 
+  filter(winter_pc_change <= 500) %>% # zoom in, some extreme values!
+  ggplot() +
+  geom_point(aes(x = winter_pc_change, y = winter_wkend_pc_change))
+```
+
+Cluster not centred on 0 for winter_pc_change, but is on winter_wkend change = 0 - so some households change for winter but not on weekday/weekend schedule
+
+Some don't change much for winter but change lots for weekday/weekend schedule
+
+Some change lots for winter, but not on weekday/weekend schedule
+
+So possible clusters (types of households) here.
+
+### Continue k-means clustering
+
+4. Do k-means clustering and find which clusters each row belong to
+5. Do k-means clustering for range of k values and find out which number of clusters best fits the data (according to different methods)
+6. Plot the data and colour by cluster to visualise
+
+```{r}
+clustered_hholds <- kmeans(df_cluster,
+                        centers = 6,
+                        iter.max = 25, # did not converge in 10 iterations so increased
+                        nstart = 25)
+
+clustered_hholds
+```
+### model stats for K=6
+
+```{r}
+# tidy tells us stats: here size of the clusters and mean (check?) values for our variables
+broom::tidy(clustered_hholds,
+            col.names = colnames(df_cluster)) # don't actually need col.names
+
+# glance gives us sum-squared (ss) and tots withins values
+broom::glance(clustered_hholds, col.names = colnames(df_cluster))
+
+# augment tells which rownames assigned to which cluster
+broom::augment(clustered_hholds, col.names = colnames(df_cluster), data = df_cluster)
+```
+
+6 clusters are interesting (remember these are scaled values, so -ve doesn't mean -ve, just means less than the mean (centred at 0)):
+
+* cluster 6 is one value only, high scaled winter_pc_change and winter_wkend_pc_change, lower winter_mean and summer_wkend_pc_change
+* cluster 5 have has most values (2510) -- low changers in multiple aspects, maybe these are most efficient / lowest consumers
+* cluster 4 is next largest (1333) -- not seasonal changers but are weekend > weekday use
+* clusters 1-3 have fewer households (100s each)
+  * cluster 1 = 494 households, high winter means and low seasonal change so high energy consumers overall?
+  * cluster 3 = 406 households, negative scaled weekend pc changes in both seasons --> little change by wday type so suggests constant usage all week (no weekday/weekend schedule, maybe occupied all week)
+  * cluster 2 = 244 households, much higher than avg weekend change in both seasons, while being fairly average for other factors
+  
+Clustering does seem to make some sense here!
+
+## optimise k
+
+```{r}
+library(broom)
+  
+max_k <- 10
+
+k_clusters <- tibble(k = 1:max_k) %>% 
+  mutate(kclust = map(k, ~ kmeans(df_cluster, .x, iter.max = 15, nstart = 25)),
+         tidied = map(kclust, tidy),
+         glanced = map(kclust, glance),
+         augmented = map(kclust, augment, df_cluster))
+
+k_clusters
+```
+### elbow method
+
+```{r}
+clustering <- k_clusters %>% 
+  unnest(glanced)
+
+clustering
+```
+
+```{r}
+ggplot(clustering, aes(x = k, y = tot.withinss)) +
+  geom_point() +
+  geom_line() +
+  scale_x_continuous(breaks = seq(1, 20, by = 1))
+```
+
+Elbow at k = 4
+
+Note the goal here is to find the minimum tot.withinss but with the fewest clusters possible - it’s a cost function to find the best gain (here, loss!) in tot.withinss at the least cost in adding k.
+
+### silhouette method
+
+```{r}
+# from factoextra, requires also package "ggsignif", "rstatix"
+library(ggsignif)
+library(rstatix)
+```
+
+```{r}
+fviz_nbclust(df_cluster,
+             kmeans,
+             method = "silhouette",
+             nstart = 25)
+```
+
+this suggests optimal k is 3
+
+Note: silhouette method gives a measure of how similar an object is to its own cluster (cohesion) compared to other clusters (separation) – https://towardsdatascience.com/silhouette-method-better-than-elbow-method-to-find-optimal-clusters-378d62ff6891
+
+### gap stat - DO NOT RE-RUN
+
+```{r, eval = FALSE}
+fviz_nbclust(df_cluster,
+             kmeans,
+             method = "gap_stat",
+             nstart = 25,
+             k.max = 15)
+# use verbose = FALSE to suppress progress messages
+```
+
+Note lots of warnings that clusters did not converge in 10 iterations, unable to find argument to ask function to do more iterations.
+
+This takes a long time - gap stat not so good for large dataset?
+
+## plot and colour by cluster
+
+Check for k = 3, k = 4 -- very different answers for elbow and silhouette methods so look at the data and decide
+
+### with k = 4
+
+```{r}
+clustering %>% 
+  unnest(cols = c(augmented)) %>% 
+  filter(k <= 4) %>% 
+  ggplot(aes(x = summer_wkend_pc_change, y = winter_wkend_pc_change)) +
+  geom_point(aes(colour = .cluster, fill = .cluster), size = 1, alpha = 0.2) +
+  scale_colour_manual(values = c("mediumblue", "goldenrod1", "deeppink1", "lightgreen")) +
+  scale_fill_manual(values = c("mediumblue", "goldenrod1", "deeppink1", "lightgreen"))
+```
+
+Looking at wkend change in both seasons - clusters 2 and 4 separate this in half, with cluster 2 being higher changers, cluster 4 being lower changers; can see some cluster 1 (especially overlapping with cluster 4) but can't see cluster 3 here
+
+```{r}
+clustering %>% 
+  unnest(cols = c(augmented)) %>% 
+  filter(k <= 4) %>% 
+  #filter(seasonal_rel_chg_in_sd < 1) %>% # zoom in to bottom-left group
+  ggplot(aes(x = winter_pc_change, y = seasonal_rel_chg_in_sd)) +
+  geom_point(aes(colour = .cluster, fill = .cluster), size = 1, alpha = 0.2) +
+  scale_colour_manual(values = c("mediumblue", "goldenrod1", "deeppink1", "lightgreen")) +
+  scale_fill_manual(values = c("mediumblue", "goldenrod1", "deeppink1", "lightgreen"))
+```
+
+Here, cluster 2 and 4 are at lower end -- lower winter_pc_change and low/verage seasonal_rel_change_in_sd
+
+Cluster 3 is one extreme point with very high winter_pc_change and seasonal_rel_chg_in_sd
+
+```{r}
+k4_means <- k_clusters %>% 
+  unnest(tidied) %>% 
+  filter(k==4) %>% 
+  select(-c(kclust, glanced, augmented, k)) %>% 
+  relocate(cluster, .before = winter_mean_kwh) %>% 
+  relocate(size, .after = cluster)
+
+k4_means
+```
+
+Overall, with 4 clusters, we have:
+
+* Largest cluster (4; 3295 hholds) is lower than average winter mean, wkend changes, season change - i.e. low(est?) users and low changers
+* Next largest cluster (2; 1123 households) is medium/lower than average winter mean, does have wkend changes (both seasons) - i.e. lower users but have different energy usage on weekend v weekday in both winter and summer
+* Third largest cluster (1; 569 households) has highest winter means, no/low wkend changes, also no/low season changes - i.e. generally high users without much change
+* Fourth cluster is one household with extreme values -- _suggest removing this one and reclustering!_
+
+**Can we exclude the household in cluster 3 as unusual? Help us to see the other clusters better?**
+
+First check k = 3:
+
+### with k = 3
+
+```{r}
+clustering %>% 
+  unnest(cols = c(augmented)) %>% 
+  filter(k <= 3) %>% 
+  ggplot(aes(x = summer_wkend_pc_change, y = winter_wkend_pc_change)) +
+  geom_point(aes(colour = .cluster, fill = .cluster), size = 1, alpha = 0.2) +
+  scale_colour_manual(values = c("mediumblue", "goldenrod1", "deeppink1")) +
+  scale_fill_manual(values = c("mediumblue", "goldenrod1", "deeppink1"))
+```
+
+Similar to above, clusters 2 and 3 are lower changers, cluster 1 are higher changers
+
+```{r}
+clustering %>% 
+  unnest(cols = c(augmented)) %>% 
+  filter(k <= 3) %>% 
+  filter(seasonal_rel_chg_in_sd < 1) %>% # zoom in to bottom-left group
+  ggplot(aes(x = winter_pc_change, y = seasonal_rel_chg_in_sd)) +
+  geom_point(aes(colour = .cluster, fill = .cluster), size = 1, alpha = 0.2) +
+  scale_colour_manual(values = c("mediumblue", "goldenrod1", "deeppink1")) +
+  scale_fill_manual(values = c("mediumblue", "goldenrod1", "deeppink1"))
+```
+
+Extreme value is in cluster 2 (high changers) - see unzoomed version
+
+Some separation pink v yellow (clusters 2 v 3) along this axis
+
+```{r}
+k3_means <- k_clusters %>% 
+  unnest(tidied) %>% 
+  filter(k==3) %>% 
+  select(-c(kclust, glanced, augmented, k)) %>% 
+  relocate(cluster, .before = winter_mean_kwh) %>% 
+  relocate(size, .after = cluster)
+
+k3_means
+```
+
+Overall, with 3 clusters, we have:
+
+* Largest cluster (3; 3297 hholds (v 3295 for k=4)) is lower than average for all winter mean, wkend changes, season change - i.e. low(est?) users and low changers
+* Next largest cluster (1; 1126 households (v 1123 for k=4)) is medium/lower than average winter mean, does have wkend changes (both seasons) - i.e. lower users but have different energy usage on weekend v weekday in both winter and summer
+* Third largest cluster (2; 565 households (v 596 for k=4)) has highest winter means, no/low wkend changes, some season changes - i.e. generally high users without much change _at weekends_ (k=4 was low/no change here)
+
+### choose k / next steps
+
+Same type of clusters in both -- I think worthwhile to remove the outliers by checking the maths on my summary stats, and redo to see if clustering becomes more optimal
+
+```{r}
+view(skimr::skim(df_clean))
+```
+
+winter_pc_change is wild - large sd, large mean, large outlier max value
+
+Calculated as `100 * (winter_mean_kwh - summer_mean_kwh) / summer_mean_kwh`
+
+Need to reframe to catch 0.000001 / 0.01 which is effectively 0 / 0 but will come out as 1000s
+
+--> do this in new notebook: "K means clustering"
+
+## remove outlier, recluster
+
+```{r}
+outlier <- k_clusters %>% 
+  filter(k==4) %>% 
+  unnest(augmented) %>% 
+  filter(.cluster == 3) %>% 
+  pull(.rownames)
+
+outlier
+```
+
+```{r}
+# remove outlier from input daa, before scaling!
+df_trim2 <- df_trim %>% 
+  filter(lc_lid != outlier)
+
+df_trim2
+```
+
+4,987 households now
+
+```{r}
+# prep data for clustering
+df_cluster2 <- df_trim2 %>% 
+  # name the rows with household id
+  column_to_rownames("lc_lid") %>% 
+  # scale the data (normal around mean, sd 0,1)
+  mutate(across(where(is.numeric), scale))
+
+df_cluster2
+```
+
+```{r, eval = FALSE}
+# old df, now update, do no re-run this!
+# look at correlations
+corrplot(cor(df_cluster2), method = "number", type = "lower")
+```
+
+Still same/similar correlations as before
+
+```{r}
+max_k <- 10
+
+k_clusters <- tibble(k = 1:max_k) %>% 
+  mutate(kclust = map(k, ~ kmeans(df_cluster2, .x, iter.max = 15, nstart = 25)),
+         tidied = map(kclust, tidy),
+         glanced = map(kclust, glance),
+         augmented = map(kclust, augment, df_cluster2))
+
+k_clusters
+```
+
+### elbow method
+
+```{r}
+clustering <- k_clusters %>% 
+  unnest(glanced)
+
+clustering
+```
+
+```{r}
+ggplot(clustering, aes(x = k, y = tot.withinss)) +
+  geom_point() +
+  geom_line() +
+  scale_x_continuous(breaks = seq(1, 20, by = 1))
+```
+
+Very weird behaviour here... k = 3 or 5 may be optimal (low tot.withinss) and NOT k=4
+
+Note the goal here is to find the minimum tot.withinss but with the fewest clusters possible - it’s a cost function to find the best gain (here, loss!) in tot.withinss at the least cost in adding k.
+
+### silhouette method
+
+```{r}
+fviz_nbclust(df_cluster2,
+             kmeans,
+             method = "silhouette",
+             nstart = 25)
+```
+
+this suggests optimal k is 3 or 4.
+
+Note: silhouette method gives a measure of how similar an object is to its own cluster (cohesion) compared to other clusters (separation) – https://towardsdatascience.com/silhouette-method-better-than-elbow-method-to-find-optimal-clusters-378d62ff6891
+
+### Inspect and visualise for k = 3
+
+Taken together, both elbow and silhouette suggest looking at k = 3 clusters would be optimal
+
+```{r}
+clustering %>% 
+  unnest(cols = c(augmented)) %>% 
+  filter(k <= 3) %>% 
+  ggplot(aes(x = summer_wkend_pc_change, y = winter_wkend_pc_change)) +
+  geom_point(aes(colour = .cluster, fill = .cluster), size = 1, alpha = 0.2) +
+  scale_colour_manual(values = c("mediumblue", "springgreen2", "deeppink1")) +
+  scale_fill_manual(values = c("mediumblue", "springgreen2", "deeppink1"))
+```
+
+Similar pattern to above, here cluster 1 is low changers, cluster 3 is high changers
+
+```{r}
+clustering %>% 
+  unnest(cols = c(augmented)) %>% 
+  filter(k <= 3) %>% 
+  filter(seasonal_rel_chg_in_sd < 1) %>% # zoom in to bottom-left group
+  ggplot(aes(x = winter_pc_change, y = seasonal_rel_chg_in_sd)) +
+  geom_point(aes(colour = .cluster, fill = .cluster), size = 1, alpha = 0.2) +
+  scale_colour_manual(values = c("grey80", "goldenrod1", "deeppink1")) +
+  scale_fill_manual(values = c("grey80", "goldenrod1", "deeppink1"))
+```
+
+Still have extreme values here... 
+
+And not able to discern what cluster 2 is along these plotted axes
+
+```{r}
+clustering %>% 
+  unnest(cols = c(augmented)) %>% 
+  filter(k <= 3) %>% 
+  #filter(winter_pc_change < 1) %>% 
+  ggplot(aes(x = winter_pc_change, y = winter_wkend_pc_change)) +
+  geom_point(aes(colour = .cluster, fill = .cluster), size = 1, alpha = 0.2) +
+  scale_colour_manual(values = c("mediumblue", "springgreen2", "deeppink1")) +
+  scale_fill_manual(values = c("mediumblue", "springgreen2", "deeppink1"))
+```
+
+One extreme value, cluster 1, out at ~70 for winter_pc_change
+
+Cluster 1 v 3 is wkend change difference (higher/lower than average in the scaled values)
+
+Not clear what cluster 2 is doing here either
+
+```{r}
+clustering %>% 
+  unnest(cols = c(augmented)) %>% 
+  filter(k <= 3) %>% 
+  filter(.cluster == 2) %>% 
+  ggplot(aes(x = summer_wkend_pc_change, y = winter_wkend_pc_change)) +
+  geom_point(size = 1, alpha = 0.2)
+```
+
+Similar to cluster 3
+
+```{r}
+clustering %>% 
+  unnest(cols = c(augmented)) %>% 
+  filter(k <= 3) %>% 
+  filter(.cluster == 2) %>% 
+  filter(winter_pc_change < 1) %>% 
+  ggplot(aes(x = winter_pc_change, y = seasonal_rel_chg_in_sd)) +
+  geom_point(size = 1, alpha = 0.2)
+```
+
+All cluster 2 are at no seasonal change
+
+```{r}
+clustering %>% 
+  unnest(cols = c(augmented)) %>% 
+  filter(k <= 3) %>% 
+  filter(.cluster == 2) %>% 
+  filter(winter_pc_change < 1) %>% 
+  ggplot(aes(x = winter_pc_change, y = winter_wkend_pc_change)) +
+  geom_point(size = 1, alpha = 0.2)
+```
+
+```{r}
+clustering %>% 
+  unnest(cols = c(augmented)) %>% 
+  filter(k <= 3) %>% 
+  #filter(.cluster == 2) %>% 
+  filter(winter_pc_change < 1) %>% 
+  ggplot(aes(y = winter_pc_change, x = winter_mean_kwh)) +
+  geom_point(aes(colour = .cluster, fill = .cluster), size = 1, alpha = 0.2) +
+  scale_colour_manual(values = c("mediumblue", "springgreen2", "deeppink1")) +
+  scale_fill_manual(values = c("mediumblue", "springgreen2", "deeppink1"))
+```
+
+Cluster 2 has the extreme winter_pc_change value, rest are all ~-0.015 winter change and distributed about winter mean value (0-2) - so hidden in the main mass
+
+## add cluster labels back to raw df
+
+```{r}
+cluster_labels_scaled <- k_clusters %>% 
+  filter(k ==3) %>% 
+  unnest(augmented) %>% 
+  #select(-c(kclust,tidied,glanced,k)) %>%  # then unscale the means
+  select(.rownames, .cluster)
+
+cluster_labels_scaled
+```
+
+```{r}
+df_clean_clustered <- left_join(df_clean, cluster_labels_scaled, by = join_by(lc_lid == .rownames))
+
+df_clean_clustered
+```
+
+```{r}
+joined_all_clustered <- left_join(joined_all, cluster_labels_scaled, by = join_by(lc_lid == .rownames))
+
+joined_all_clustered
+```
+
+## plot raw data by summer/winter 2013 clusters
+
+```{r}
+library(tsibble)
+library(slider)
+```
+
+```{r}
+joined_all_clustered %>% 
+  ggplot() +
+  geom_line(aes(x = date, y = kwh, group = lc_lid), alpha = 0.01) +
+  facet_wrap(~ .cluster)
+```
+
+
+## to do
+
+look at kmeans for these 3 clusters (from above)
+decide where to also remove / deal with extreme values (e.g. what if comparing to 0, have an upper limit e.g. just above the normal max value)
+
+
+
+explain
+
+
+
+try DB-SCAN method too
+
+
+pick clustering method, reassign cluster number back to unscaled dataset
+
+explain clusters
+
+show timeseries per cluster
+
+extension: consider ts forecasting (probabilistic!!) for each cluster
+extension: consider clustering by relationship with weather (e.g. coefficient for linear regression model for each household)
+
+
+
+
