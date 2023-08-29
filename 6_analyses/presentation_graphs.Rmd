@@ -248,6 +248,23 @@ scatter plots coloured by clusters
 summary_clustered %>% 
   mutate(cluster = factor(.cluster, levels = c(1,2,3))) %>% 
   ggplot() +
+  geom_point(aes(x = summer_wkend_pc_change, y = winter_wkend_pc_change,
+                 colour = cluster), size = 1, alpha = 0.4) +
+  scale_colour_manual(values = c("#15487a", "goldenrod1", "deeppink1")) +
+  labs(x = "% energy change on Summer weekends",
+       y = "% energy change on Winter weekends",
+       title = "Change in energy usage: weekend effect",
+       subtitle = "for 5,078 households in London, Summer/Winter 2013 (with k = 3)") +
+  theme_cc_final_project()
+
+ggsave("k3_weekend_effect_scatterplot.png", width = 15, units = "cm", dpi = 300)
+```
+
+
+```{r}
+summary_clustered %>% 
+  mutate(cluster = factor(.cluster, levels = c(1,2,3))) %>% 
+  ggplot() +
   geom_boxplot(aes(x = cluster, y = winter_fold_change, fill = cluster), linewidth = 0.5, show.legend = FALSE) +
   scale_fill_manual(values = c("#15487a", "goldenrod1", "deeppink1")) +
   labs(x = "Cluster", y = "Fold change in mean energy consumption (Summer to Winter)",
@@ -292,12 +309,12 @@ joined_clustered %>%
   ggplot(aes(x = date, group = cluster)) +
   geom_line(aes(y = median_kwh, colour = cluster), show.legend = FALSE) +
   #geom_ribbon(aes(ymin = lower_ci, ymax = upper_ci), fill = "grey", alpha = 1) +
-  labs(y = "Median eergy consumption (kWh)", x = "Date", title = "Median energy consumption by cluster") +
+  labs(y = "Median energy consumption (kWh)", x = "Date", title = "Median energy consumption by cluster") +
   theme_cc_final_project() +
-  scale_colour_manual(values = c("#15487a", "#611bb8", "#65a346")) +
+  scale_colour_manual(values = c("#15487a", "goldenrod1", "deeppink1")) +
   facet_wrap(~ cluster, ncol = 1)
 
-ggsave("three_clusters_ts.png", width = 15, units = "cm", dpi = 300)
+ggsave("three_clusters_ts.png", width = 18, units = "cm", dpi = 300)
 ```
 
 
