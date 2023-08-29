@@ -124,6 +124,12 @@ Other cleaning steps:
 * if not using season/month, could add temp_levels factor (low, medium, high - work out how) - _not doing in this iteration_
 
 ```{r}
+start_date <- min(daily_energy_weather_all$date)
+start_date
+
+end_date <- max(daily_energy_weather_all$date)
+end_date
+
 daily_weather_trim <- read_csv("../3_raw_data/london_weather.csv") %>% 
   janitor::clean_names() %>% 
   mutate(date = ymd(date)) %>% 
@@ -203,8 +209,18 @@ _Note: ggpairs or pairs.panels not running right now_
 
 ```{r}
 daily_energy_weather_all %>% 
+  distinct(lc_lid)
+```
+
+
+```{r}
+daily_energy_weather_all %>% 
   ggplot() +
-  geom_point(aes(x = mean_temp, y = kwh))
+  geom_point(aes(x = mean_temp, y = kwh), colour = "grey80", alpha = 0.3) +
+  labs(y = "Energy consumption (kWh)", x = "Mean temperature",
+       title = "Energy consumption by daily temperature",
+       subtitle = "for 5,566 households in London") +
+  theme_cc_final_project()
 ```
 
 There are points with much higher usages as lower temperatures - are they the same household?
@@ -235,7 +251,7 @@ daily_energy_weather %>%
   geom_point(aes(x = mean_temp, y = kwh, colour = lc_lid))
 ```
 
-We've only lost on household from the cleaning step
+We've only lost one household from the cleaning step
 
 ## kwh ~ sunshine
 
@@ -523,7 +539,12 @@ daily_weather
 ```{r}
 daily_weather %>% 
   ggplot(aes(x = month, y = mean_temp)) +
-  geom_boxplot()
+  geom_boxplot() +
+  labs(x = "Month", y = "Mean temperature",
+       title = "Seasonal variation in temperature",
+       subtitle = "in London, Dec 2011 - Feb 2014") +
+  theme_cc_final_project() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
 So mean temperature is a factor of month, higher temps in summer, lower in winter.

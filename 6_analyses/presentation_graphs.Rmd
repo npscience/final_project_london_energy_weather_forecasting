@@ -1,0 +1,304 @@
+---
+title: "Presentation graphs"
+output: html_notebook
+---
+
+This notebook is to generate graphs for final project presentation for CodeClan course - August 30, 2024
+
+# Requirements
+
+* Use cleaned_data csv files, prepared from running 3 scripts (in /scripts) and using raw data files
+* Run "K_means_clustering" notebook to generate dataframes in environment, or load in csv files:
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+joined_all <- read_csv("../4_cleaned_data/daily_energy_all_hholds.csv")
+summary_clustered <- read_csv("../4_cleaned_data/households_summary_clustered.csv")
+joined_clustered <- read_csv("../4_cleaned_data/households_energy_weather_clustered.csv")
+daily_weather <- read_csv("../4_cleaned_data/daily_weather_clean.csv")
+```
+
+
+# ggplot theme
+
+> #d8efff light blue
+> #15487a dark blue
+
+```{r}
+theme_cc_final_project <- function() {
+    theme_classic() +
+    theme(axis.text = element_text(size = 16),
+        axis.title = element_text(size = 14),
+        plot.title = element_text(size = 16),
+        plot.caption = element_text(size = 12))
+}
+```
+
+
+# graphs
+
+## time series (all data averaged)
+
+to show general patterns
+
+```{r}
+library(tsibble)
+library(slider)
+```
+
+```{r}
+joined_all_ts <- as_tsibble(joined_all, key = lc_lid, index = date)
+```
+
+```{r}
+joined_all_ts %>% 
+  distinct(lc_lid)
+```
+
+
+```{r}
+joined_all_ts %>% 
+  index_by(date) %>% 
+  summarise(median_kwh = median(kwh)) %>% 
+  mutate(kwh_moving_avg = slide_dbl(
+    .x = median_kwh,
+    .f = ~ mean(.),
+    .before = 7,
+    .after = 6, # 14-day rolling average
+    .complete = TRUE
+  )) %>% 
+  ggplot() + 
+  geom_line(aes(x = date, y = median_kwh), colour = "grey") + 
+  geom_line(aes(x = date, y = kwh_moving_avg), colour = "#15487a", linewidth = 2) +
+  labs(x = "Date",
+       y = "Median energy consumption (kWh)",
+       title = "Energy consumption over time",
+       subtitle = "for 5,566 households in London",
+       caption = "Blue line is 14-day rolling average") +
+  theme_cc_final_project()
+
+ggsave("all_hholds_median_ts.png", width = 15, units = "cm", dpi = 300)
+```
+
+```{r}
+joined_all_ts %>% 
+  index_by(date) %>% 
+  summarise(median_kwh = median(kwh)) %>% 
+  mutate(kwh_moving_avg = slide_dbl(
+    .x = median_kwh,
+    .f = ~ mean(.),
+    .before = 7,
+    .after = 6, # 14-day rolling average
+    .complete = TRUE
+  )) %>% 
+  feasts::gg_subseries(y = median_kwh, period = 7) +
+  labs(y = "Median energy consumption (kWh)", x = "Week number (Dec 2011 - Feb 2014)",
+       title = "Weekday trend in energy consumption",
+       subtitle = "for 5,566 households in London") +
+  theme_cc_final_project() +
+  theme(axis.text.x = element_text(angle = 45, size = 6, hjust = 1))
+
+ggsave("weekday_trend_energy.png", width = 18, units = "cm", dpi = 300)
+```
+
+
+## three individual households 
+
+to show variation
+
+```{r}
+joined_clustered %>% 
+  filter(lc_lid %in% c("MAC000004", "MAC000030", "MAC000003")) %>% 
+  mutate(household = case_when(
+    lc_lid == "MAC000004" ~ "Household 1", 
+    lc_lid == "MAC000030" ~ "Household 2", 
+    lc_lid == "MAC000003" ~ "Household 3",
+    .default = NA_character_)) %>% 
+  ggplot(aes(x = date, y = kwh, colour = lc_lid)) +
+  geom_line(show.legend = FALSE) +
+  facet_wrap(~ household, ncol = 1) + 
+  labs(y = "Energy consumption (kWh)", x = "Date", title = "Energy consumption of individual households") +
+  scale_y_continuous(breaks = c(0,20,40), labels = c("0","20","40")) +
+  theme_cc_final_project() +
+  scale_colour_manual(values = c("#15487a", "#611bb8", "#65a346"))
+
+ggsave("three_hholds.png", width = 15, units = "cm", dpi = 300)
+```
+
+
+## seasonal patterns
+
+e.g. time series (how different to above? or just remind)
+
+## weekday type
+
+e.g. after seasonal decomposition
+
+## weather ~ kwh
+
+temperature, sunshine as two most correlated?
+
+```{r}
+joined_clustered %>% 
+  group_by(date) %>% 
+  mutate(median_kwh = median(kwh)) %>% 
+  ggplot() +
+  geom_point(aes(x = mean_temp, y = median_kwh), colour = "grey80", alpha = 0.3) +
+  labs(y = "Median energy consumption (kWh)", x = "Mean temperature (degC)",
+       title = "Median energy consumption by daily temperature",
+       subtitle = "for 5,566 households in London") +
+  theme_cc_final_project()
+
+ggsave("energy_v_temperature_scatter.png", width = 15, units = "cm", dpi = 300)
+```
+
+```{r}
+joined_clustered %>% 
+  group_by(date) %>% 
+  mutate(median_kwh = median(kwh)) %>% 
+  ungroup() %>% 
+  summarise(corr = cor(mean_temp, median_kwh))
+```
+
+```{r}
+joined_clustered %>% 
+  group_by(date) %>% 
+  mutate(median_kwh = median(kwh)) %>% 
+  ggplot() +
+  geom_point(aes(x = sunshine, y = median_kwh), colour = "grey80", alpha = 0.3) +
+  labs(y = "Median energy consumption (kWh)", x = "Sunshine (hours)",
+       title = "Median energy consumption by hours of sunshine",
+       subtitle = "for 5,566 households in London") +
+  theme_cc_final_project()
+
+ggsave("energy_v_sunshine_scatter.png", width = 15, units = "cm", dpi = 300)
+```
+
+
+```{r}
+joined_clustered %>% 
+  group_by(date) %>% 
+  mutate(median_kwh = median(kwh)) %>% 
+  ungroup() %>% 
+  summarise(corr = cor(sunshine, median_kwh))
+```
+
+
+## weather x time
+
+show temp by month curve...
+
+```{r}
+daily_weather %>% 
+  mutate(month = month(date, label = TRUE), .after = date) %>% 
+  mutate(wday = wday(date, label = TRUE), .after = month) %>% 
+  mutate(weekend = if_else(wday %in% c("Sat", "Sun"), T, F), .after = wday) %>% 
+  mutate(quarter = quarter(date, type = "date_first", fiscal_start = 12), .after = month) %>% 
+  mutate(yearseason = case_when(
+    quarter == "2011-09-01" ~ "Autumn 2011",
+    quarter == "2011-12-01" ~ "Winter 2011",
+    quarter == "2012-03-01" ~ "Spring 2012",
+    quarter == "2012-06-01" ~ "Summer 2012",
+    quarter == "2012-09-01" ~ "Autumn 2012",
+    quarter == "2012-12-01" ~ "Winter 2012",
+    quarter == "2013-03-01" ~ "Spring 2013",
+    quarter == "2013-06-01" ~ "Summer 2013",
+    quarter == "2013-09-01" ~ "Autumn 2013",
+    quarter == "2013-12-01" ~ "Winter 2013",
+    .default = NA_character_
+  ), .after = quarter) %>% 
+  mutate(yearseason = factor(yearseason, levels = c(
+    "Autumn 2011", "Winter 2011", "Spring 2012", "Summer 2012",
+    "Autumn 2012", "Winter 2012", "Spring 2013", "Summer 2013",
+    "Autumn 2013", "Winter 2013"
+    ))) %>% 
+  mutate(season = case_when(
+    str_detect(yearseason, "Winter") ~ "Winter",
+    str_detect(yearseason, "Summer") ~ "Summer",
+    str_detect(yearseason, "Spring|Autumn") ~ "Spring/Autumn",
+    .default = NA_character_
+  ), .after = month) %>% 
+  ggplot(aes(x = month, y = mean_temp)) +
+  geom_boxplot() +
+  labs(x = "Month", y = "Mean temperature",
+       title = "Seasonal variation in temperature",
+       subtitle = "in London, Dec 2011 - Feb 2014") +
+  theme_cc_final_project() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggsave("monthly_temp.png", width = 25, units = "cm", dpi = 300)
+```
+
+
+## corrplot - features
+
+and/or show icons to describe summary features
+
+(show equations?)
+
+## model results
+
+elbow? silhouette?
+scatter plots coloured by clusters
+
+```{r}
+summary_clustered %>% 
+  mutate(cluster = factor(.cluster, levels = c(1,2,3))) %>% 
+  ggplot() +
+  geom_boxplot(aes(x = cluster, y = winter_fold_change, fill = cluster), linewidth = 0.5, show.legend = FALSE) +
+  scale_fill_manual(values = c("#15487a", "goldenrod1", "deeppink1")) +
+  labs(x = "Cluster", y = "Fold change in mean energy consumption (Summer to Winter)",
+       title = "Change in energy usage: seasonal effect",
+       subtitle = "for 5,078 households in London, Summer/Winter 2013 (with k = 3)") +
+  coord_flip() +
+  theme_cc_final_project()
+
+ggsave("k3_winter_effect_scatterplot.png", width = 15, units = "cm", dpi = 300)
+```
+
+```{r}
+summary_clustered %>% 
+  mutate(cluster = factor(.cluster, levels = c(1,2,3))) %>% 
+  ggplot() +
+  geom_histogram(aes(fill = cluster, x = winter_fold_change)) +
+  facet_wrap(~ cluster)
+```
+
+
+## timelines by type
+
+3 lines over time
+
+```{r}
+ci_level = 0.01 # for 99% CI intervals
+
+# calc CI with sample_mean + ci_level*(sample_sd/(sqrt(sample_size)))
+
+joined_clustered %>% 
+  mutate(cluster = factor(.cluster, levels = c(1,2,3), labels = c(
+    "Cluster 1",
+    "Cluster 2",
+    "Cluster 3 "
+  ))) %>% 
+  group_by(cluster, date) %>% 
+  summarise(median_kwh = median(kwh),
+            mean_kwh = mean(kwh),
+            lower_ci = mean(kwh) - (ci_level * (sd(kwh)/sqrt(n()))),
+            upper_ci = mean(kwh) + (ci_level * (sd(kwh)/sqrt(n())))) %>% 
+  ungroup() %>% 
+  ggplot(aes(x = date, group = cluster)) +
+  geom_line(aes(y = median_kwh, colour = cluster), show.legend = FALSE) +
+  #geom_ribbon(aes(ymin = lower_ci, ymax = upper_ci), fill = "grey", alpha = 1) +
+  labs(y = "Median eergy consumption (kWh)", x = "Date", title = "Median energy consumption by cluster") +
+  theme_cc_final_project() +
+  scale_colour_manual(values = c("#15487a", "#611bb8", "#65a346")) +
+  facet_wrap(~ cluster, ncol = 1)
+
+ggsave("three_clusters_ts.png", width = 15, units = "cm", dpi = 300)
+```
+
+
+

@@ -1,0 +1,56 @@
+---
+title: "Presentation graphs"
+output: html_notebook
+---
+
+This notebook is to generate graphs for final project presentation for CodeClan course - August 30, 2024
+
+# Requirements
+
+* Use cleaned_data, prepared from running 3 scripts (in /scripts) and using raw data files
+* Run "K_means_clustering" notebook to generate dataframes in environment
+
+# ggplot theme
+
+# graphs
+
+## time series (all data averaged)
+
+to show general patterns
+
+## three individual households 
+
+to show variation
+
+## seasonal patterns
+
+e.g. time series (how different to above? or just remind)
+
+## weekday type
+
+e.g. after seasonal decomposition
+
+## weather ~ kwh
+
+temperature, sunshine as two most correlated?
+
+## weather x time
+
+show temp by month curve...
+
+## corrplot - features
+
+and/or show icons to describe summary features
+
+(show equations?)
+
+## model results
+
+elbow? silhouette?
+scatter plots coloured by clusters
+
+## timelines by type
+
+3 lines over time
+
+
