@@ -1,0 +1,839 @@
+---
+title: "Clustering households"
+output: html_notebook
+---
+
+## Intro
+
+
+# Method
+
+
+## Summary data prep
+
+In brief: Reducing dataset from >3 million rows where ~5,500 households each have up to 829 observations (1 per date per household) to a summary table of features describing each household's energy consumption behaviour (1 row per household).
+
+Features are based on summer/winter seasons, namely the most recent ones in the available data: Summer 2013 (June - August 2013) and Winter 2013 (December 2013 - February 2014), and many calculated variables are removed from the clustering dataset to avoid multi-colinearity and try to ensure variables are as independent as they could be.
+
+For full exploration leading to the cleaning and feature engineering steps, refer to:
+
+* data_exploration.Rmd, household_energy_stats.Rmd -- initial exploration, understanding the full dataset (incl. over time)
+* weather_data_exploration.Rmd -- looking at weather v season variables as potential predictors
+* feature_engineering_hhold_clustering.Rmd -- refining the data prep and k means clustering method used here
+
+
+#### Setup and load data from files
+
+```{r}
+library(tidyverse)
+library(cluster)
+#library(factoextra) ## these are for hierarchical clustering
+#library(dendextend) ## these are for hierarchical clustering
+library(corrplot) # for correlation plot
+library(broom) # for k means optimisation stats
+library(ggsignif) # for silhouette method
+library(rstatix) # for silhouette method
+```
+
+```{r}
+joined_all <- read_csv("../4_cleaned_data/daily_energy_weather_all.csv") %>% 
+  mutate(yearseason = factor(yearseason, levels = c(
+    "Autumn 2011", "Winter 2011", "Spring 2012", "Summer 2012",
+    "Autumn 2012", "Winter 2012", "Spring 2013", "Summer 2013",
+    "Autumn 2013", "Winter 2013"
+  )))
+```
+
+Reduce full dataset to only Summer and Winter 2013, include only households with at least ~50% (45 days' worth) of data in each season.
+
+```{r}
+threshold <- 45 # minimum number values per season per hh
+
+# list hholds to include
+winter_summer_2013_hholds <- joined_all %>% 
+  group_by(yearseason, lc_lid) %>% 
+  summarise(count = n()) %>% 
+  ungroup() %>% 
+  filter(yearseason %in% c("Summer 2013", "Winter 2013")) %>% 
+  # keep only hholds with >x values in each season
+  filter(count >= threshold) %>% 
+  group_by(lc_lid) %>% 
+  # find which households in both seasons
+  summarise(num_seasons = n()) %>% # 5283 households in either
+  filter(num_seasons == 2) %>%  # 4999 households in both
+  pull(lc_lid)
+
+# size of data to include in next steps
+joined_all %>% 
+  filter(lc_lid %in% winter_summer_2013_hholds) %>% 
+  filter(yearseason %in% c("Summer 2013", "Winter 2013")) %>% 
+  group_by(yearseason, lc_lid) %>% 
+  summarise(count = n()) %>% 
+  ungroup() %>% 
+  group_by(yearseason) %>% 
+  summarise(num_hh = n())
+```
+
+n = 5,078 households in each season
+
+```{r}
+# make summer/winter subset
+summer_winter2013 <- joined_all %>% 
+  filter(yearseason %in% c("Summer 2013", "Winter 2013"),
+         lc_lid %in% winter_summer_2013_hholds)
+
+summer_winter2013
+```
+
+#### Create summary features
+
+Make dataframe with 1 row per household describing energy consumption behaviour, according to key features: seasonal change, within-season average and variance, pattern of usage by weekday type (weekend or Mon-Fri as typical working week).
+
+_Note: infer change = 0 if comparator mean values both extremely small, otherwise small / very small gives large change value when realsitically it is changing from effectively 0 to 0, no change._
+
+```{r}
+summer_mean <- summer_winter2013 %>% 
+  filter(yearseason == "Summer 2013") %>% 
+  group_by(lc_lid) %>% 
+  mutate(summer_mean_kwh = mean(kwh)) %>%
+  ungroup() %>% 
+  select(lc_lid, summer_mean_kwh) %>% 
+  unique()
+
+winter_mean <- summer_winter2013 %>% 
+  filter(yearseason == "Winter 2013") %>% 
+  group_by(lc_lid) %>% 
+  mutate(winter_mean_kwh = mean(kwh)) %>%
+  ungroup() %>% 
+  select(lc_lid, winter_mean_kwh) %>% 
+  unique()
+
+summer_variance <- summer_winter2013 %>% 
+  filter(yearseason == "Summer 2013") %>% 
+  group_by(lc_lid) %>% 
+  mutate(summer_sd = sd(kwh)) %>%
+  ungroup() %>% 
+  select(lc_lid, summer_sd) %>% 
+  unique()
+
+winter_variance <- summer_winter2013 %>% 
+  filter(yearseason == "Winter 2013") %>% 
+  group_by(lc_lid) %>% 
+  mutate(winter_sd = sd(kwh)) %>%
+  ungroup() %>% 
+  select(lc_lid, winter_sd) %>% 
+  unique()
+
+winter_weekend_mean <- summer_winter2013 %>% 
+  filter(yearseason == "Winter 2013" & weekend) %>% 
+  group_by(lc_lid) %>% 
+  mutate(winter_wkend_mean = mean(kwh)) %>%
+  ungroup() %>% 
+  select(lc_lid, winter_wkend_mean) %>% 
+  unique()
+
+winter_weekday_mean <- summer_winter2013 %>% 
+  filter(yearseason == "Winter 2013" & !weekend) %>% 
+  group_by(lc_lid) %>% 
+  mutate(winter_wkday_mean = mean(kwh)) %>%
+  ungroup() %>% 
+  select(lc_lid, winter_wkday_mean) %>% 
+  unique()
+
+summer_weekend_mean <- summer_winter2013 %>% 
+  filter(yearseason == "Summer 2013" & weekend) %>% 
+  group_by(lc_lid) %>% 
+  mutate(summer_wkend_mean = mean(kwh)) %>%
+  ungroup() %>% 
+  select(lc_lid, summer_wkend_mean) %>% 
+  unique()
+
+summer_weekday_mean <- summer_winter2013 %>% 
+  filter(yearseason == "Summer 2013" & !weekend) %>% 
+  group_by(lc_lid) %>% 
+  mutate(summer_wkday_mean = mean(kwh)) %>%
+  ungroup() %>% 
+  select(lc_lid, summer_wkday_mean) %>% 
+  unique()
+```
+
+Create features based on change between seasons and weekday types:
+
+```{r}
+summer_wkend_chg <- left_join(summer_weekend_mean, summer_weekday_mean) %>% 
+  mutate(summer_wkend_pc_change = if_else(
+    summer_wkend_mean < 0.5 & summer_wkday_mean < 0.5, 0,
+    (100 * (summer_wkend_mean - summer_wkday_mean) / summer_wkday_mean)))
+
+summer_wkend_chg %>%
+  #filter(summer_wkend_mean < 0.5 & summer_wkday_mean < 0.5)
+  filter(summer_wkend_pc_change == 0) 
+  # all 0 values are inferred, this has inferred 22 zeros
+
+summer_wkend_chg %>% 
+  ggplot() +
+  geom_histogram(aes(x = summer_wkend_pc_change), bins = 30)
+```
+
+Inferring 0 where values are small gives a normal-looking distribution, with reasonable x axis limits (-100 % to +150 % change)
+
+```{r}
+winter_wkend_chg <- left_join(winter_weekend_mean, winter_weekday_mean) %>% 
+  mutate(winter_wkend_pc_change = if_else(
+    winter_wkend_mean < 0.5 & winter_wkday_mean < 0.5, 0,
+    (100 * (winter_wkend_mean - winter_wkday_mean) / winter_wkday_mean)))
+
+winter_wkend_chg %>%
+  #filter(winter_wkend_mean < 0.5 & winter_wkday_mean < 0.5)
+  filter(winter_wkend_pc_change == 0) 
+  # All 24 zero values are inferred
+
+winter_wkend_chg %>% 
+  ggplot() +
+  geom_histogram(aes(x = winter_wkend_pc_change), bins = 30)
+```
+
+Again, inferring change = 0 is helpful (similar to the above).
+
+```{r}
+winter_mean_change <- inner_join(summer_mean, winter_mean) %>% 
+  # recode lowest mean values to 0.5 kWh (as effectively none)
+  mutate(summer_mean_kwh_imputed = if_else(summer_mean_kwh < 0.5, 0.5, summer_mean_kwh),
+         winter_mean_kwh_imputed = if_else(winter_mean_kwh < 0.5, 0.5, winter_mean_kwh)) %>% 
+  # calculate percentage change (with condition to set ~0/ ~0 as 0)
+  mutate(winter_fold_change = if_else(
+    winter_mean_kwh_imputed < 0.5 & summer_mean_kwh_imputed < 0.5, 0,
+    (winter_mean_kwh_imputed - summer_mean_kwh_imputed) / summer_mean_kwh_imputed))
+
+winter_mean_change %>%
+  filter(winter_mean_kwh < 0.5 & summer_mean_kwh < 0.5)
+  #filter(winter_fold_change == 0) 
+  # all 11 zero values are inferred for the 11 hhouseholds with both low
+
+winter_mean_change %>% 
+  ggplot() +
+  geom_histogram(aes(x = winter_fold_change), bins = 30)
+```
+
+```{r}
+winter_mean_change %>% 
+  select(-summer_mean_kwh, -winter_mean_kwh) %>% 
+  filter(winter_fold_change > 10) %>% 
+  arrange(desc(winter_fold_change)) %>% 
+  arrange(summer_mean_kwh_imputed)
+
+winter_mean_change %>% 
+  filter(summer_mean_kwh < 0.5 & winter_mean_kwh < 0.5)
+```
+
+Imputing low mean kWh values (i.e. < 0.5 kWh) to a minimum of 0.5 kWh helps keep the calculated fold change reasonable. Although note that for some, this dramatically reduces the fold change - this imputed value affects 37 households, of which 11 households have imputed values for both winter and summer mean, effectively making their seasonal change 0.
+
+The resulting winter_fold_change variables is still right-skewed but is on a more reasonable scale than calculating percentage change and without any imputations or low-value conditions (e.g. extreme value at 5000% versus many at <10%). Note: these data will be scaled later for clustering, so this skewness will be less of an issue.
+
+```{r}
+# this table is not used in join, instead use winter_sd_change
+winter_var_change <- inner_join(summer_variance, winter_variance) %>% 
+  mutate(seasonal_rel_chg_in_sd = winter_sd / summer_sd)
+
+winter_var_change %>% 
+  filter(winter_sd < 0.5) %>% 
+  ggplot() +
+  geom_histogram(aes(x = winter_sd), bins = 50)
+
+winter_var_change %>% 
+  filter(summer_sd < 0.5) %>% 
+  ggplot() +
+  geom_histogram(aes(x = summer_sd), bins = 50)
+```
+
+Set lowest bound sd as 0.1 kWh, impute lower values as 0.1 - thus cutoff won't affect many households (~10-15, see above histograms) but will ensure the maths stays sensible.
+
+```{r}
+winter_sd_change <- inner_join(summer_variance, winter_variance) %>% 
+  # recode lowest sd values to 0.1 kWh (as effectively none)
+  mutate(summer_sd_imputed = if_else(summer_sd < 0.1, 0.1, summer_sd),
+         winter_sd_imputed = if_else(winter_sd < 0.1, 0.1, winter_sd)) %>% 
+  # calculate fold change (with condition to set ~0/ ~0 as 0)
+  mutate(winter_fold_chg_sd = if_else(winter_sd < 0.1 & summer_sd < 0.1, 0, 
+                                      winter_sd_imputed / summer_sd_imputed))
+
+winter_sd_change %>%
+  #filter(winter_sd < 0.1 & summer_sd < 0.1)
+  filter(winter_fold_chg_sd == 0) 
+  # all 9 zero values are inferred for the 9 hhouseholds with both low
+
+winter_sd_change %>% 
+  ggplot() +
+  geom_histogram(aes(x = winter_fold_chg_sd), bins = 30)
+```
+
+Right skewed with a few higher values, but reasonable scale for fold change (0 to 80)
+
+### Join summary data
+
+The above feature engineering created multiple tables with household id and summary stat(s), as listed below, and of which the ** tables contain the features to join in a summary table for clustering:
+
+* summer_mean
+* **winter_mean
+* summer_variance
+* winter_variance
+* winter_weekend_mean
+* winter_weekday_mean
+* summer_weekend_mean
+* summer_weekday_mean
+* **summer_wkend_chg
+* **winter_wkend_chg
+* **winter_mean_change
+* **winter_sd_change
+
+```{r}
+# build summary table, type of join doesn't matter
+summary_df <- inner_join(winter_mean, summer_wkend_chg) %>% 
+  inner_join(winter_wkend_chg) %>% 
+  inner_join(winter_mean_change) %>% 
+  inner_join(winter_sd_change) %>% 
+  # remove columns that lead to multicolinearity
+  select(lc_lid, winter_mean_kwh, 
+         summer_wkend_pc_change, winter_wkend_pc_change,
+         winter_fold_change, winter_fold_chg_sd)
+```
+
+```{r}
+colnames(summary_df)
+```
+
+```{r}
+dim(summary_df)
+```
+
+Summary table contains data on 5078 households, with id plus 5 attributes
+
+## K-means clustering optimisation
+
+Steps for K-means:
+
+1. Have named rows
+2. Scale data
+3. Understand correlations between vars (remember no outcome var here) to help us understand our data
+4. Do k-means clustering and find which clusters each row belong to
+5. Do k-means clustering for range of k values and find out which number of clusters best fits the data (according to different methods)
+6. Plot the data and colour by cluster to visualise
+
+### 1+2 data prep for k-means clustering
+
+```{r}
+summary_df %>% 
+  # name the rows with household id
+  column_to_rownames("lc_lid") %>%
+  # mean_kwh and winter changes (mean, sd) are all right-skewed so log transform these values
+  mutate(across(.cols = c(winter_mean_kwh, winter_fold_change, winter_fold_chg_sd),
+                .fns = ~ log(.x + 1), # plus 1 to avoid NaN and -Inf
+                .names = "log_{.col}_p1")) %>% 
+  skimr::skim()
+```
+
+log(value) --> NaN (if value <0) or -Inf (if value == 0), so +1 to all values to ensure > 0.
+
+i.e. 762 NaNs in log(winter_fold_change) because have they have negative fold change values, lowest is -0.92, so +1 to all values is sufficient for log transformation (log(value + 1) --> new "no change" or 0 fold_change is now log(1)).
+
+```{r}
+# prep data for clustering
+summary_df_log <- summary_df %>% 
+  # mean_kwh and winter changes (mean, sd) are all right-skewed so log transform these values
+  mutate(across(.cols = c(winter_mean_kwh, winter_fold_change, winter_fold_chg_sd),
+                .fns = ~ log(.x + 1), # plus 1 to avoid NaN and -Inf
+                .names = "log_{.col}_p1"))
+
+summary_df_log
+```
+
+```{r}
+view(skimr::skim(summary_df_log))
+```
+
+log_winter_fold_chg_sd_p1 is still right-skewed, but the other two are more normal now.
+
+```{r}
+colnames(summary_df_log)
+```
+
+```{r}
+# prep data for clustering
+df_cluster <- summary_df_log %>%   
+  # name the rows with household id
+  column_to_rownames("lc_lid") %>%
+  # keep only the vars of interest for clustering
+  select(log_winter_mean_kwh_p1, log_winter_fold_change_p1, log_winter_fold_chg_sd_p1, summer_wkend_pc_change, winter_wkend_pc_change) %>% 
+  # scale the data (normal around mean, sd 0,1)
+  mutate(across(where(is.numeric), scale))
+```
+
+```{r}
+# see correlations between values
+corrplot(cor(df_cluster), method = "number", type = "lower")
+```
+
+Moderate positive correlations between:
+
+* Summer and winter weekend v weekday change
+* Winter/summer fold change ~ winter mean
+* Winter/summer change in sd ~ Winter/summer fold change
+
+```{r}
+# Summer and winter weekend v weekday change
+summary_df_log %>% 
+  ggplot() +
+  geom_point(aes(x = summer_wkend_pc_change, y = winter_wkend_pc_change))
+```
+
+```{r}
+# Winter/summer fold change ~ winter mean
+summary_df_log %>% 
+  ggplot() +
+  geom_point(aes(x = log_winter_mean_kwh_p1, y = log_winter_fold_change_p1))
+```
+
+
+```{r}
+# Winter/summer change in sd ~ Winter/summer fold change
+summary_df_log %>% 
+  ggplot() +
+  geom_point(aes(x = log_winter_fold_change_p1, y = log_winter_fold_chg_sd_p1))
+```
+
+for all three, most households are in a single cluster in the middle, some values out on the edges.
+
+Not clear clusters here, but could be groups in multi-dimensional spaces (e.g. "average" households versus thos on the edge)
+
+### K means optimisation
+
+```{r}
+max_k <- 10
+
+k_clusters <- tibble(k = 1:max_k) %>% 
+  mutate(kclust = map(k, ~ kmeans(df_cluster, .x, iter.max = 15, nstart = 25)),
+         tidied = map(kclust, tidy),
+         glanced = map(kclust, glance),
+         augmented = map(kclust, augment, df_cluster))
+
+k_clusters
+```
+
+
+### Evaluation: elbow, silhouette methods
+
+evalute using these 2 methods, skip gap stat (too high processing demand)
+
+#### Elbow method:
+
+The goal here is to find the minimum tot.withinss but with the fewest clusters possible - it’s a cost function to find the best gain (here, loss!) in tot.withinss at the least cost in adding k.
+
+```{r}
+clustering <- k_clusters %>% 
+  unnest(glanced)
+
+clustering
+```
+
+```{r}
+ggplot(clustering, aes(x = k, y = tot.withinss)) +
+  geom_point() +
+  geom_line() +
+  scale_x_continuous(breaks = seq(1, 20, by = 1))
+```
+
+Elbow at k = 4
+
+#### Silhouette method
+
+Note: silhouette method gives a measure of how similar an object is to its own cluster (cohesion) compared to other clusters (separation) – https://towardsdatascience.com/silhouette-method-better-than-elbow-method-to-find-optimal-clusters-378d62ff6891
+
+```{r}
+fviz_nbclust(df_cluster,
+             kmeans,
+             method = "silhouette",
+             nstart = 25)
+```
+
+This suggest optimal k is 2.
+
+Visually inspect k = 2, k = 3, k = 4
+
+#### summer v winter weekends
+
+```{r}
+# k = 2
+clustering %>% 
+  unnest(cols = c(augmented)) %>% 
+  filter(k <= 2) %>% 
+  ggplot(aes(x = summer_wkend_pc_change, y = winter_wkend_pc_change)) +
+  geom_point(aes(colour = .cluster, fill = .cluster), size = 1, alpha = 0.2) +
+  scale_colour_manual(values = c("mediumblue", "goldenrod1")) +
+  scale_fill_manual(values = c("mediumblue", "goldenrod1"))
+
+# k = 3
+clustering %>% 
+  unnest(cols = c(augmented)) %>% 
+  filter(k <= 3) %>% 
+  ggplot(aes(x = summer_wkend_pc_change, y = winter_wkend_pc_change)) +
+  geom_point(aes(colour = .cluster, fill = .cluster), size = 1, alpha = 0.2) +
+  scale_colour_manual(values = c("mediumblue", "goldenrod1", "deeppink1")) +
+  scale_fill_manual(values = c("mediumblue", "goldenrod1", "deeppink1")) #+
+  #facet_wrap(~ .cluster, ncol = 1)
+
+# k = 4
+clustering %>% 
+  unnest(cols = c(augmented)) %>% 
+  filter(k <= 4) %>% 
+  #filter(.cluster == 4) %>%  # filter to see each cluster
+  ggplot(aes(x = summer_wkend_pc_change, y = winter_wkend_pc_change)) +
+  geom_point(aes(colour = .cluster, fill = .cluster), size = 1, alpha = 0.2) +
+  scale_colour_manual(values = c("mediumblue", "goldenrod1", "deeppink1", "lightgreen")) +
+  scale_fill_manual(values = c("mediumblue", "goldenrod1", "deeppink1", "lightgreen")) +
+  facet_wrap(~ .cluster)
+```
+
+With k = 2 --> there is no real distinction along this plane
+
+With k = 3 --> there is clear separation of cluster 1 into low changers and cluster 2 into high changers.
+
+With k = 4 --> clusters 3 and 4 are "low weekday-type changers" (i.e. clustered in bottom-left of the mass), clusters 1 and 2 cover most of the main mass of points, not necessarily "high changers"
+
+#### winter mean ~ winter/summer change
+
+```{r}
+# k = 2
+clustering %>% 
+  unnest(cols = c(augmented)) %>% 
+  filter(k <= 2) %>% 
+  ggplot(aes(x = log_winter_mean_kwh_p1, y = log_winter_fold_change_p1)) +
+  geom_point(aes(colour = .cluster, fill = .cluster), size = 1, alpha = 0.2) +
+  scale_colour_manual(values = c("mediumblue", "goldenrod1")) +
+  scale_fill_manual(values = c("mediumblue", "goldenrod1"))
+
+# k = 3
+clustering %>% 
+  unnest(cols = c(augmented)) %>% 
+  filter(k <= 3) %>% 
+  ggplot(aes(x = log_winter_mean_kwh_p1, y = log_winter_fold_change_p1)) +
+  geom_point(aes(colour = .cluster, fill = .cluster), size = 1, alpha = 0.2) +
+  scale_colour_manual(values = c("mediumblue", "goldenrod1", "deeppink1")) +
+  scale_fill_manual(values = c("mediumblue", "goldenrod1", "deeppink1")) +
+  facet_wrap(~ .cluster)
+
+# k = 4
+clustering %>% 
+  unnest(cols = c(augmented)) %>% 
+  filter(k <= 4) %>% 
+  #filter(.cluster == 4) %>%  # filter to see each cluster
+  ggplot(aes(x = log_winter_mean_kwh_p1, y = log_winter_fold_change_p1)) +
+  geom_point(aes(colour = .cluster, fill = .cluster), size = 1, alpha = 0.2) +
+  scale_colour_manual(values = c("mediumblue", "goldenrod1", "deeppink1", "lightgreen")) +
+  scale_fill_manual(values = c("mediumblue", "goldenrod1", "deeppink1", "lightgreen")) +
+  facet_wrap(~ .cluster)
+```
+
+With k = 2, cluster 2 seems to be no/low change in winter/summer mean, while cluster 1 is more top-right (higher winter mean, higher winter/summer fold change -- remember this is transformed data: scale(log(x + 1)))
+
+With k = 3, cluster 3 is the higher group, cluster 2 is lower/no change, cluster 1 is across the whole mass of points
+
+With k = 4, cluster 4 picks out higher mean with low/no change, the other clusters don't look particularly meaningful
+
+
+#### winter/summer change in mean v sd
+
+```{r}
+# k = 2
+clustering %>% 
+  unnest(cols = c(augmented)) %>% 
+  filter(k <= 2) %>% 
+  ggplot(aes(x = log_winter_fold_change_p1, y = log_winter_fold_chg_sd_p1)) +
+  geom_point(aes(colour = .cluster, fill = .cluster), size = 1, alpha = 0.2) +
+  scale_colour_manual(values = c("mediumblue", "goldenrod1")) +
+  scale_fill_manual(values = c("mediumblue", "goldenrod1"))
+
+# k = 3
+clustering %>% 
+  unnest(cols = c(augmented)) %>% 
+  filter(k <= 3) %>% 
+  ggplot(aes(x = log_winter_fold_change_p1, y = log_winter_fold_chg_sd_p1)) +
+  geom_point(aes(colour = .cluster, fill = .cluster), size = 1, alpha = 0.2) +
+  scale_colour_manual(values = c("mediumblue", "goldenrod1", "deeppink1")) +
+  scale_fill_manual(values = c("mediumblue", "goldenrod1", "deeppink1")) #+
+  #facet_wrap(~ .cluster)
+
+# k = 4
+clustering %>% 
+  unnest(cols = c(augmented)) %>% 
+  filter(k <= 4) %>% 
+  #filter(.cluster == 4) %>%  # filter to see each cluster
+  ggplot(aes(x = log_winter_fold_change_p1, y = log_winter_fold_chg_sd_p1)) +
+  geom_point(aes(colour = .cluster, fill = .cluster), size = 1, alpha = 0.2) +
+  scale_colour_manual(values = c("mediumblue", "goldenrod1", "deeppink1", "lightgreen")) +
+  scale_fill_manual(values = c("mediumblue", "goldenrod1", "deeppink1", "lightgreen")) +
+  facet_wrap(~ .cluster)
+```
+
+With k = 2, clusters 1 and 2 are distinct (bottom-left and top-right)
+
+With k = 3, cluster 3 is more top-right, clusters 1 and 2 more bottom-left
+
+With k = 4, cluster 4 is smallest and picks out the values around 0, but is not distinct from the other 3 clusters, which are also not distinct from each other
+
+### Clustering summary
+
+From the above visualisations, it seems k=3 is optimal for separating clusters along correlating axes of interest, although it is not clear that these separations are very strong or meaningful.
+
+Looking at the k-means:
+
+```{r}
+k3_means <- k_clusters %>% 
+  unnest(tidied) %>% 
+  filter(k==3) %>% 
+  select(-c(kclust, glanced, augmented, k)) %>% 
+  relocate(cluster, size)
+
+k3_means
+```
+
+Transform k-means back to raw values - reverse scaling then (where applicable) reverse log and add 1.
+
+```{r}
+summary_df_log
+```
+
+
+```{r}
+# scale = x - mean / sd
+winter_mean_kwh_mean <- mean(summary_df_log$log_winter_mean_kwh_p1)
+winter_mean_kwh_sd <- sd(summary_df_log$log_winter_mean_kwh_p1)
+winter_fold_change_mean <- mean(summary_df_log$log_winter_fold_change_p1)
+winter_fold_change_sd <- sd(summary_df_log$log_winter_fold_change_p1)
+winter_fold_chg_sd_mean <- mean(summary_df_log$log_winter_fold_chg_sd_p1)
+winter_fold_chg_sd_sd <- sd(summary_df_log$log_winter_fold_chg_sd_p1)
+summer_wkend_pc_change_mean <- mean(summary_df_log$summer_wkend_pc_change)
+summer_wkend_pc_change_sd <- sd(summary_df_log$summer_wkend_pc_change)
+winter_wkend_pc_change_mean <- mean(summary_df_log$winter_wkend_pc_change)
+winter_wkend_pc_change_sd  <- sd(summary_df_log$winter_wkend_pc_change)
+```
+
+``` {r}
+k3_means_untransformed <- k3_means %>% 
+  mutate(winter_mean_kwh = exp((log_winter_mean_kwh_p1 * winter_mean_kwh_sd) + winter_mean_kwh_mean) - 1,
+         winter_fold_change = exp((log_winter_fold_change_p1 * winter_fold_change_sd) + winter_fold_change_mean) - 1,
+         winter_fold_chg_sd = exp((log_winter_fold_chg_sd_p1 * winter_fold_chg_sd_sd) + winter_fold_chg_sd_mean) - 1) %>% 
+  mutate(summer_wkend_pc_change = (summer_wkend_pc_change * summer_wkend_pc_change_sd) - summer_wkend_pc_change_mean,
+         winter_wkend_pc_change = (winter_wkend_pc_change * winter_wkend_pc_change_sd) - winter_wkend_pc_change_mean) %>% 
+  select(-c(log_winter_mean_kwh_p1, log_winter_fold_change_p1, log_winter_fold_chg_sd_p1, withinss)) %>% 
+  # name cols as k3_mean
+  rename_with(~ paste0("k3_mean_", .x, recycle0 = TRUE), .cols = -c(cluster,size)) %>% 
+  rename(cluster_size = size)
+
+k3_means_untransformed
+```
+
+Using k=3 for k-means clustering:
+
+* Cluster 1 is largest (n = 3,151 households) and this group is centred on: using less energy at the weekend than weekday, not changing much from winter to summer, and with a lower than average energy use in the winter 
+* Cluster 2 is second largest (n = 1,117 households) and similar to cluster 1 in winter usage and winter v summer behaviour, except they use **more** energy at weekends than during weekdays (in both summer and winter)
+* Cluster 3 is the smallest (n = 810 households) and characterised similarly to cluster 1 in weekend behaviour (not much change, not an increase compared to weekday) but they use **more** than average energy during the winter and increase usage from summer to winter.
+
+```{r}
+# add the cluster label onto the original dataframes
+
+# retrieve the labels
+cluster_labels <- k_clusters %>% 
+  filter(k ==3) %>% 
+  unnest(augmented) %>% 
+  select(.rownames, .cluster)
+
+# join to summary df
+summary_df_clustered <- left_join(summary_df, cluster_labels, by = join_by(lc_lid == .rownames)) %>% 
+  left_join(k3_means_untransformed, by = join_by(.cluster == cluster))
+
+# join to full df (filtered for only households with cluster)
+joined_clustered <- inner_join(joined_all, cluster_labels, by = join_by(lc_lid == .rownames)) %>% 
+  left_join(k3_means_untransformed, by = join_by(.cluster == cluster))
+```
+
+```{r}
+joined_clustered %>% 
+  distinct(lc_lid)
+```
+
+Note the joined df only contains the 5,078 households that were clustered (inner_join).
+
+## Visualisation and insights
+
+Data to draw insights from:
+
+* `summary_df_clustered` - 1 row per household, summarising winter/summer and weekend/weekday energy consumption behaviour, with cluster number and cluster means
+* `joined_clustered` - 1 row per date per household, with individual energy use as well as weather conditions, with cluster number and cluster means
+
+
+### Summary boxplots
+
+Weekend effect
+
+```{r}
+summary_df_clustered %>% 
+  mutate(weekend_effect = if_else(.cluster == 2,"cluster 2","clusters 1+3")) %>% 
+  ggplot() +
+  geom_boxplot(aes(x = weekend_effect, y = summer_wkend_pc_change))
+
+summary_df_clustered %>% 
+  mutate(weekend_effect = if_else(.cluster == 2,"cluster 2","clusters 1+3")) %>% 
+  ggplot() +
+  geom_boxplot(aes(x = weekend_effect, y = winter_wkend_pc_change))
+```
+
+Winter effect
+
+```{r}
+summary_df_clustered %>% 
+  mutate(winter_effect = if_else(.cluster == 3,"cluster 3","clusters 1+2")) %>% 
+  ggplot() +
+  geom_point(aes(x = winter_mean_kwh, y = winter_fold_change, colour = winter_effect)) +
+  theme(legend.position = "bottom")
+```
+
+```{r}
+summary_df_clustered %>% 
+  mutate(winter_effect = if_else(.cluster == 3,"cluster 3","clusters 1+2")) %>% 
+  ggplot() +
+  geom_boxplot(aes(x = winter_effect, y = winter_fold_change))
+
+summary_df_clustered %>% 
+  mutate(winter_effect = if_else(.cluster == 3,"cluster 3","clusters 1+2")) %>% 
+  ggplot() +
+  geom_boxplot(aes(x = winter_effect, y = winter_mean_kwh))
+```
+
+### time series plots
+
+```{r}
+# time series for households in cluster 3 (winter effect)
+joined_clustered %>% 
+  filter(.cluster == 3) %>% 
+  group_by(date) %>% 
+  mutate(median_kwh = median(kwh)) %>% 
+  ungroup() %>% 
+  ggplot() +
+  geom_line(aes(x = date, y = kwh, group = lc_lid), colour = "grey80", alpha = 0.1) +
+  geom_line(aes(x = date, y = median_kwh), colour = "indianred") +
+  scale_y_continuous(limits = c(0,350)) +
+  theme_classic()
+```
+
+```{r}
+# time series for households in cluster 3 (winter effect)
+## zoomed in on y axis
+joined_clustered %>% 
+  filter(.cluster == 3) %>% 
+  group_by(date) %>% 
+  mutate(median_kwh = median(kwh)) %>% 
+  ungroup() %>% 
+  ggplot() +
+  geom_line(aes(x = date, y = kwh, group = lc_lid), colour = "grey80", alpha = 0.1) +
+  geom_line(aes(x = date, y = median_kwh), colour = "indianred") +
+  scale_y_continuous(limits = c(0,50)) +
+  theme_classic()
+```
+
+
+
+```{r}
+# time series for households in cluster 2 (weekend effect)
+joined_clustered %>% 
+  filter(.cluster == 2) %>% 
+  group_by(date) %>% 
+  mutate(median_kwh = median(kwh)) %>% 
+  ungroup() %>% 
+  ggplot() +
+  geom_line(aes(x = date, y = kwh, group = lc_lid), colour = "grey80", alpha = 0.1) +
+  geom_line(aes(x = date, y = median_kwh), colour = "indianred") +
+  scale_y_continuous(limits = c(0,350)) +
+  theme_classic()
+```
+
+```{r}
+# time series for households in cluster 2 (weekend effect)
+## zoomed in on one month (2013-01)
+joined_clustered %>% 
+  filter(.cluster == 2) %>%
+  group_by(date) %>% 
+  mutate(median_kwh = median(kwh)) %>% 
+  ungroup() %>% 
+  filter(date >= "2013-01-01" & date <= "2013-01-31") %>% 
+  ggplot() +
+  geom_line(aes(x = date, y = kwh, group = lc_lid), colour = "grey80", alpha = 0.1) +
+  geom_line(aes(x = date, y = median_kwh), colour = "indianred") +
+  scale_y_continuous(limits = c(0,50)) +
+  theme_classic()
+```
+
+
+```{r}
+# time series for households in cluster 1 (low changers)
+joined_clustered %>% 
+  filter(.cluster == 1) %>% 
+  group_by(date) %>% 
+  mutate(median_kwh = median(kwh)) %>% 
+  ungroup() %>% 
+  ggplot() +
+  geom_line(aes(x = date, y = kwh, group = lc_lid), colour = "grey80", alpha = 0.1) +
+  geom_line(aes(x = date, y = median_kwh), colour = "indianred") +
+  scale_y_continuous(limits = c(0,350)) +
+  theme_classic()
+```
+
+```{r}
+# time series for households in cluster 1 (low changers)
+## zoomed in on y axis
+joined_clustered %>% 
+  filter(.cluster == 1) %>% 
+  group_by(date) %>% 
+  mutate(median_kwh = median(kwh)) %>% 
+  ungroup() %>% 
+  ggplot() +
+  geom_line(aes(x = date, y = kwh, group = lc_lid), colour = "grey80", alpha = 0.1) +
+  geom_line(aes(x = date, y = median_kwh), colour = "indianred") +
+  scale_y_continuous(limits = c(0,50)) +
+  theme_classic()
+```
+
+```{r}
+# time series for households in cluster 1 (low changers)
+## zoomed in on y axis & for Jan 2013 only
+joined_clustered %>% 
+  filter(.cluster == 1) %>% 
+  group_by(date) %>% 
+  mutate(median_kwh = median(kwh)) %>% 
+  ungroup() %>% 
+  filter(date >= "2013-01-01" & date <= "2013-01-31") %>% 
+  ggplot() +
+  geom_line(aes(x = date, y = kwh, group = lc_lid), colour = "grey80", alpha = 0.1) +
+  geom_line(aes(x = date, y = median_kwh), colour = "indianred") +
+  scale_y_continuous(limits = c(0,50)) +
+  theme_classic()
+```
+
+```{r}
+ci_level = 0.01 # for 99% CI intervals
+
+# calc CI with sample_mean + ci_level*(sample_sd/(sqrt(sample_size)))
+
+joined_clustered %>% 
+  group_by(.cluster, date) %>% 
+  summarise(median_kwh = median(kwh),
+            mean_kwh = mean(kwh),
+            lower_ci = mean(kwh) - (ci_level * (sd(kwh)/sqrt(n()))),
+            upper_ci = mean(kwh) + (ci_level * (sd(kwh)/sqrt(n())))) %>% 
+  ungroup() %>% 
+  ggplot(aes(x = date)) +
+  geom_ribbon(aes(ymin = lower_ci, ymax = upper_ci, colour = .cluster), alpha = 0.5) +
+  geom_line(aes(y = mean_kwh, colour = .cluster)) +
+  theme_classic() +
+  theme(legend.position = "bottom")
+```
+
