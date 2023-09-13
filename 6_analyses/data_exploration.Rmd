@@ -1256,6 +1256,7 @@ daily_weather <- read_csv("../3_raw_data/london_weather.csv")
 ```{r}
 skimr::skim(daily_weather)
 ```
+
 date is not date value
 dates cover 1979 to 2020 december, filter to range of energy data
 
@@ -1303,3 +1304,10 @@ Remaining ideas:
 * types of weather days - see if there are clusters of temperature, precipitation, cloud cover, sunshine etc --> categories "mild cloudy rainy day" etc
 
 _written scripts to prepare data (including joined data), moving to new notebook now to explore weather data and household energy/weather features_
+
+# original data (3rd source)
+
+```{r}
+lcl_1 <- read_csv("../3_raw_data/small_lcl_data/LCL-June2015v2_1.csv")
+```
+
