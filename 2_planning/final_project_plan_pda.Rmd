@@ -125,7 +125,7 @@ _What were the main stages in your data analysis process?_
   a. Steps for [cleaning household energy data](../5_scripts/prepare_household_energy_data.R) included (i) clean column names, (ii) trim dataframe dates to remove low-number early dates and unusual end date values and (iii - optional) remove some households due to insufficient data and/or high percentage 0 kWh days (the final joined data used in clustering did not include this data removal step, it included all households' data at first and households with insufficient data were removed during the clustering preparation process, see below)
   b. Steps for [cleaning weather data](../5_scripts/prepare_weather_data.R) included (i) trim to date range matching the energy data, (ii) factorise some weather observations (e.g. snow to TRUE/FALSE) nad (iii) add some data quality indicators where temperature variables do not make sense (e.g. min_temp > mean_temp for that day)
 3. **Perform K-means clustering** - see [K-means clustering notebook](../6_analyses/K_means_clustering.Rmd), including data preparation for clustering, analysis of clustering model performance and visualisation of the resulting clusters
-4. **Create visualisations to present** to the "client" (in a live 10-minute presentation to CodeClan instructors and fellow students, August 30th) - see [presentation graphs notebook](../6_analyses/presentation_graphs.Rmd)
+4. **Create visualisations to present** to the "client" (in a live 10-minute presentation to CodeClan instructors and fellow students, August 30th) - see [presentation graphs notebook](../7_presentation/presentation_graphs.Rmd)
 5. **Create presentation** - see [PDF of slides](../7_presentation/CodeClan_finalproject_Aug2023.pdf)
 
 #### Tools for data analysis
