@@ -6,7 +6,7 @@ In this project, I used exploratory data analysis and K-means clustering to unde
 
 ### Project context 
 
-This was my final "capstone" project for CodeClan course, August 2023. The brief was to carry out an end-to-end data project addressing a business-relevant brief (fictional) and present insights back to the "client" - for which, this repo also contains the final project presentation slides.
+This was my final "capstone" project for CodeClan course, August 2023, completed in 7 days (over ~12 day period). The brief was to carry out an end-to-end data project addressing a business-relevant brief (fictional) and present insights back to the "client" - for which, this repo also contains the final project presentation slides.
 
 For this project, I imagined the client was an energy company or related organisation, who were interested in better understanding how household customers were using energy, with the intention to use these insights to improve their products and services.
 
@@ -140,7 +140,7 @@ There are various data ethics considerations here:
 
 ### Reflections and next steps
 
-This was a short project to complete the CodeClan course (~10 days) and it could be improved and extended in several ways.
+This was a short project to complete the CodeClan course (~7 days) and it could be improved and extended in several ways.
 
 * **1. Improve existing model**
   * Add more explanatory variables: within-season weather changes (using weather dataset), pricing tariff groups (from original data)
