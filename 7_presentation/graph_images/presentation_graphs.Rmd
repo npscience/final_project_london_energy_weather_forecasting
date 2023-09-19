@@ -15,10 +15,10 @@ library(tidyverse)
 ```
 
 ```{r}
-joined_all <- read_csv("../4_cleaned_data/daily_energy_all_hholds.csv")
-summary_clustered <- read_csv("../4_cleaned_data/households_summary_clustered.csv")
-joined_clustered <- read_csv("../4_cleaned_data/households_energy_weather_clustered.csv")
-daily_weather <- read_csv("../4_cleaned_data/daily_weather_clean.csv")
+joined_all <- read_csv("../../4_cleaned_data/daily_energy_all_hholds.csv")
+summary_clustered <- read_csv("../../4_cleaned_data/households_summary_clustered.csv")
+joined_clustered <- read_csv("../../4_cleaned_data/households_energy_weather_clustered.csv")
+daily_weather <- read_csv("../../4_cleaned_data/daily_weather_clean.csv")
 ```
 
 
@@ -273,7 +273,7 @@ summary_clustered %>%
   coord_flip() +
   theme_cc_final_project()
 
-ggsave("k3_winter_effect_scatterplot.png", width = 15, units = "cm", dpi = 300)
+ggsave("k3_winter_effect_boxplot.png", width = 15, units = "cm", dpi = 300)
 ```
 
 ```{r}
