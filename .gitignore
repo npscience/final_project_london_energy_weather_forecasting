@@ -2,6 +2,7 @@
 /3_raw_data/small_lcl_data/
 /4_cleaned_data/
 .Rproj.user
+.Rproj
 .Rhistory
 .RData
 .Ruserdata
