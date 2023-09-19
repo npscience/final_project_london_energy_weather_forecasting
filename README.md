@@ -2,11 +2,11 @@
 
 ## Project description
 
-In this repo, I use exploratory data analysis and K-means clustering to understand and classify patterns of household energy use by season and weekday type, using openly available data from a research exercise in London in ~2014.
+In this project, I used exploratory data analysis and K-means clustering to understand and classify patterns of household energy use by season and weekday type, using openly available data from a research exercise in London in ~2014 (see 'Data sources' section below).
 
 ### Project context 
 
-This was my final "capstone"" project for CodeClan course, August 2023. The brief was to carry out an end-to-end data project addressing a business-relevant brief (fictional) and present insights back to the "client" - for which, this repo also contains the final project presentation slides.
+This was my final "capstone" project for CodeClan course, August 2023. The brief was to carry out an end-to-end data project addressing a business-relevant brief (fictional) and present insights back to the "client" - for which, this repo also contains the final project presentation slides.
 
 For this project, I imagined the client was an energy company or related organisation, who were interested in better understanding how household customers were using energy, with the intention to use these insights to improve their products and services.
 
